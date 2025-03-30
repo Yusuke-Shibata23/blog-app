@@ -11,24 +11,28 @@
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
             <router-link
               to="/"
-              class="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-gray-500"
+              class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+              :class="{ 'border-b-2 border-blue-500': $route.path === '/' }"
             >
               ホーム
             </router-link>
             <router-link
               to="/posts"
-              class="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-gray-500"
+              class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+              :class="{ 'border-b-2 border-blue-500': $route.path === '/posts' }"
             >
               投稿一覧
             </router-link>
           </div>
         </div>
-        <div class="hidden sm:ml-6 sm:flex sm:items-center">
+        <div class="flex items-center">
           <template v-if="auth.isAuthenticated">
-            <span class="text-gray-700 mr-4">{{ auth.user.name }}</span>
+            <span class="text-sm text-gray-700 mr-4">
+              {{ auth.user?.name }}さん
+            </span>
             <button
               @click="handleLogout"
-              class="text-gray-900 hover:text-gray-500"
+              class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
             >
               ログアウト
             </button>
@@ -36,13 +40,13 @@
           <template v-else>
             <router-link
               to="/login"
-              class="text-gray-900 hover:text-gray-500 mr-4"
+              class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
               ログイン
             </router-link>
             <router-link
               to="/register"
-              class="text-gray-900 hover:text-gray-500"
+              class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
             >
               新規登録
             </router-link>
@@ -61,7 +65,12 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const handleLogout = async () => {
-  await auth.logout()
-  router.push('/login')
+  try {
+    await auth.logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('ログアウトに失敗しました:', error)
+    alert('ログアウトに失敗しました。')
+  }
 }
 </script> 

@@ -8,7 +8,9 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token
+    isAuthenticated: (state) => {
+      return !!state.token && !!state.user
+    }
   },
 
   actions: {
@@ -57,6 +59,12 @@ export const useAuthStore = defineStore('auth', {
         delete axios.defaults.headers.common['Authorization']
       } catch (error) {
         console.error('ログアウトに失敗しました:', error)
+        // エラーが発生しても、ローカルの状態はクリアする
+        this.token = null
+        this.user = null
+        localStorage.removeItem('token')
+        delete axios.defaults.headers.common['Authorization']
+        throw error
       }
     },
 
@@ -76,8 +84,16 @@ export const useAuthStore = defineStore('auth', {
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
         } catch (error) {
           console.error('認証状態の確認に失敗しました:', error)
-          this.logout()
+          // エラーが発生した場合は認証状態をクリア
+          this.token = null
+          this.user = null
+          localStorage.removeItem('token')
+          delete axios.defaults.headers.common['Authorization']
         }
+      } else {
+        // トークンがない場合は認証状態をクリア
+        this.user = null
+        delete axios.defaults.headers.common['Authorization']
       }
     }
   }
