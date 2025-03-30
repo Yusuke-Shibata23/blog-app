@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタムスタイル */
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors duration-200;
+  }
+
+  .form-input {
+    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* アニメーション */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* モーダル */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg w-full max-w-2xl p-6;
+}
+
+/* 投稿カード */
+.post-card {
+  @apply bg-white rounded-lg shadow-md p-6 transition-shadow duration-200 hover:shadow-lg;
+}
+
+.post-card h2 {
+  @apply text-xl font-bold text-gray-900 mb-2;
+}
+
+.post-card p {
+  @apply text-gray-600 mb-4;
+}
+
+.post-card .tags {
+  @apply flex flex-wrap gap-2 mb-4;
+}
+
+.post-card .tag {
+  @apply bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-sm;
+}
+
+/* ナビゲーション */
+.nav-link {
+  @apply text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium;
+}
+
+.nav-link.active {
+  @apply bg-gray-100 text-gray-900;
+}
+
+/* フォーム */
+.form-group {
+  @apply mb-4;
+}
+
+.form-error {
+  @apply text-red-600 text-sm mt-1;
+}
+
+/* ページネーション */
+.pagination {
+  @apply flex justify-center gap-2 mt-6;
+}
+
+.pagination-button {
+  @apply px-3 py-1 rounded-md text-sm font-medium;
+}
+
+.pagination-button.active {
+  @apply bg-blue-600 text-white;
+}
+
+.pagination-button:not(.active) {
+  @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+}

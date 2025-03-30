@@ -1,0 +1,85 @@
+{
+    "rules": {
+        "php": {
+            "indent_style": "space",
+            "indent_size": 4,
+            "max_line_length": 120,
+            "naming_conventions": {
+                "classes": "PascalCase",
+                "methods": "camelCase",
+                "variables": "camelCase",
+                "constants": "UPPER_SNAKE_CASE"
+            }
+        },
+        "vue": {
+            "indent_style": "space",
+            "indent_size": 2,
+            "max_line_length": 100,
+            "naming_conventions": {
+                "components": "PascalCase",
+                "props": "camelCase",
+                "methods": "camelCase",
+                "variables": "camelCase"
+            }
+        },
+        "javascript": {
+            "indent_style": "space",
+            "indent_size": 2,
+            "max_line_length": 100,
+            "naming_conventions": {
+                "functions": "camelCase",
+                "variables": "camelCase",
+                "constants": "UPPER_SNAKE_CASE"
+            }
+        },
+        "css": {
+            "indent_style": "space",
+            "indent_size": 2,
+            "max_line_length": 80,
+            "naming_conventions": {
+                "classes": "kebab-case",
+                "ids": "camelCase"
+            }
+        }
+    },
+    "file_organization": {
+        "php": {
+            "controllers": "app/Http/Controllers",
+            "models": "app/Models",
+            "middleware": "app/Http/Middleware",
+            "requests": "app/Http/Requests",
+            "resources": "app/Http/Resources"
+        },
+        "vue": {
+            "components": "resources/js/components",
+            "views": "resources/js/views",
+            "store": "resources/js/store",
+            "router": "resources/js/router"
+        }
+    },
+    "documentation": {
+        "require_comments": true,
+        "comment_style": "PHPDoc",
+        "require_method_docs": true,
+        "require_class_docs": true,
+        "comment_language": {
+            "php": {
+                "docblock": "英語",
+                "inline": "日本語"
+            },
+            "vue": {
+                "docblock": "英語",
+                "inline": "日本語"
+            },
+            "javascript": {
+                "docblock": "英語",
+                "inline": "日本語"
+            }
+        }
+    },
+    "testing": {
+        "require_tests": true,
+        "test_location": "tests",
+        "coverage_threshold": 80
+    }
+} 
