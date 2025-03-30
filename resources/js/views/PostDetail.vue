@@ -75,7 +75,7 @@
 
         <!-- 本文 -->
         <div class="p-6">
-          <div class="prose max-w-none" v-html="post.content"></div>
+          <div class="prose max-w-none" v-html="renderedContent"></div>
         </div>
       </div>
     </div>
@@ -112,11 +112,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuth } from '../stores/auth';
 import PostForm from '../components/PostForm.vue';
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css';
+
+// markedの設定
+marked.setOptions({
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return hljs.highlightAuto(code).value;
+  },
+  breaks: true
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -128,6 +142,12 @@ const post = ref(null);
 const showPostForm = ref(false);
 const selectedPost = ref(null);
 const selectedImage = ref(null);
+
+// Markdownコンテンツのレンダリング用のcomputed
+const renderedContent = computed(() => {
+  if (!post.value?.content) return '';
+  return marked(post.value.content);
+});
 
 const fetchPost = async () => {
   try {
