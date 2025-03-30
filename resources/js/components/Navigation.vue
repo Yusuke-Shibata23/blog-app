@@ -26,9 +26,9 @@
           </div>
         </div>
         <div class="flex items-center">
-          <template v-if="auth.isAuthenticated">
+          <template v-if="auth.isAuthenticated && auth.user && auth.user.name">
             <span class="text-sm text-gray-700 mr-4">
-              {{ auth.user?.name }}さん
+              {{ auth.user.name }}さん
             </span>
             <button
               @click="handleLogout"

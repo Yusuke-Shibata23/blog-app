@@ -19,11 +19,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        return response()->json($request->user());
     });
     Route::apiResource('posts', PostController::class);
 });
 
-// 公開投稿一覧・詳細
+// 公開投稿一覧・詳細（認証不要）
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{post}', [PostController::class, 'show']); 

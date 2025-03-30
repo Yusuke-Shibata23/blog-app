@@ -1,57 +1,58 @@
 <template>
-  <div class="post-form">
-    <h2 class="text-2xl font-bold mb-4">
-      {{ isEditing ? '投稿を編集' : '新規投稿' }}
-    </h2>
-    <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div>
-        <label for="title" class="block text-sm font-medium text-gray-700">タイトル</label>
+  <div class="post-form bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="text-xl font-bold mb-4">{{ isEditing ? '投稿を編集' : '新規投稿' }}</h2>
+    <form @submit.prevent="handleSubmit">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="title">
+          タイトル
+        </label>
         <input
           id="title"
           v-model="form.title"
           type="text"
+          class="form-input w-full"
           required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
 
-      <div>
-        <label for="content" class="block text-sm font-medium text-gray-700">内容</label>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="content">
+          本文
+        </label>
         <textarea
           id="content"
           v-model="form.content"
-          rows="5"
+          class="form-textarea w-full h-32"
           required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         ></textarea>
       </div>
 
-      <div>
-        <label for="tags" class="block text-sm font-medium text-gray-700">
-          タグ（カンマ区切りで入力）
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="tags">
+          タグ（カンマ区切り）
         </label>
         <input
           id="tags"
-          v-model="tagsInput"
+          v-model="form.tags"
           type="text"
-          placeholder="例: 技術, プログラミング, Laravel"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          class="form-input w-full"
+          placeholder="例: 技術, プログラミング, 開発"
         />
       </div>
 
-      <div class="flex gap-2">
-        <button
-          type="submit"
-          class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          {{ isEditing ? '更新' : '投稿' }}
-        </button>
+      <div class="flex justify-end gap-4">
         <button
           type="button"
           @click="$emit('cancel')"
-          class="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
         >
           キャンセル
+        </button>
+        <button
+          type="submit"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+        >
+          {{ isEditing ? '更新' : '投稿' }}
         </button>
       </div>
     </form>
@@ -59,11 +60,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-
-const auth = useAuthStore()
+import axios from 'axios'
 
 const props = defineProps({
   post: {
@@ -72,94 +71,69 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['submit', 'cancel', 'success'])
+const emit = defineEmits(['success', 'cancel'])
+
+const auth = useAuthStore()
+
+const isEditing = computed(() => !!props.post)
 
 const form = ref({
   title: '',
   content: '',
-  tags: []
+  tags: ''
 })
 
-const tagsInput = ref('')
+// 編集時は既存のデータを設定
+if (props.post) {
+  form.value = {
+    title: props.post.title,
+    content: props.post.content,
+    tags: props.post.tags ? props.post.tags.join(', ') : ''
+  }
+}
 
-const isEditing = computed(() => !!props.post)
-
-// フォームの送信処理
 const handleSubmit = async () => {
   try {
-    // タグの処理
-    const processedTags = tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag)
-
     const postData = {
       title: form.value.title,
       content: form.value.content,
-      tags: processedTags
+      tags: form.value.tags ? form.value.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
     }
 
-    console.log('Sending post data:', postData)
+    console.log('送信するデータ:', postData)
 
-    let response
-    if (props.post) {
-      response = await axios.put(`/api/posts/${props.post.id}`, postData, {
+    if (isEditing.value) {
+      await axios.put(`/api/posts/${props.post.id}`, postData, {
         headers: {
           'Authorization': `Bearer ${auth.token}`
         }
       })
     } else {
-      response = await axios.post('/api/posts', postData, {
+      await axios.post('/api/posts', postData, {
         headers: {
           'Authorization': `Bearer ${auth.token}`
         }
       })
     }
 
-    // 成功時の処理
-    emit('submit', response.data)
     emit('success')
-
-    // フォームをリセット
-    form.value = {
-      title: '',
-      content: '',
-      tags: []
-    }
-    tagsInput.value = ''
   } catch (error) {
-    console.error('投稿の保存に失敗しました:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    })
-    
-    // エラーメッセージを表示
-    const errorMessage = error.response?.data?.message || 
-                        error.response?.data?.error || 
-                        error.message || 
-                        '投稿の保存に失敗しました。'
-    alert(errorMessage)
+    console.error('投稿の保存に失敗しました:', error)
+    alert(error.response?.data?.message || '投稿の保存に失敗しました。')
   }
 }
-
-// 編集時のフォーム初期化
-onMounted(() => {
-  if (props.post) {
-    form.value = {
-      title: props.post.title,
-      content: props.post.content,
-      tags: props.post.tags || []
-    }
-    tagsInput.value = form.value.tags.join(', ')
-  }
-})
 </script>
 
 <style scoped>
-.post-form {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 1rem;
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+}
+
+.form-textarea {
+  resize: vertical;
 }
 </style> 

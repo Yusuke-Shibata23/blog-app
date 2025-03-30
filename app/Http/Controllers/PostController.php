@@ -17,7 +17,17 @@ class PostController extends Controller
     public function index(Request $request)
     {
         try {
+            \Log::info('投稿一覧の取得を開始します', [
+                'user' => Auth::user() ? Auth::user()->id : 'guest',
+                'params' => $request->all()
+            ]);
+
             $query = Post::with('user');
+
+            // ログインしているユーザーの場合、自分の投稿のみを表示
+            if (Auth::check()) {
+                $query->where('user_id', Auth::id());
+            }
 
             // タグでフィルタリング
             if ($request->has('tags') && !empty($request->tags)) {
@@ -31,9 +41,18 @@ class PostController extends Controller
 
             $posts = $query->latest()->paginate(10);
 
+            \Log::info('投稿一覧の取得が完了しました', [
+                'count' => $posts->count(),
+                'total' => $posts->total(),
+                'user_id' => Auth::id()
+            ]);
+
             return response()->json($posts);
         } catch (\Exception $e) {
-            \Log::error('Post listing failed: ' . $e->getMessage());
+            \Log::error('投稿一覧の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'message' => '投稿一覧の取得に失敗しました。',
                 'error' => $e->getMessage()

@@ -2,7 +2,7 @@
   <div class="post-list">
     <!-- 検索フィルター -->
     <div class="filters mb-4">
-      <div class="flex gap-4">
+      <div class="flex flex-wrap gap-4">
         <input
           v-model="keyword"
           type="text"
@@ -17,6 +17,15 @@
           class="form-input rounded-md"
           @input="handleTagInput"
         />
+        <div class="flex items-center">
+          <input
+            v-model="showMyPosts"
+            type="checkbox"
+            class="rounded text-blue-600"
+            @change="handleFilterChange"
+          />
+          <label class="ml-2 text-sm text-gray-700">自分の投稿のみ</label>
+        </div>
       </div>
     </div>
 
@@ -87,32 +96,50 @@ const keyword = ref('')
 const tagInput = ref('')
 const currentPage = ref(1)
 const totalPages = ref(1)
+const showMyPosts = ref(false)
 
 // 検索処理
 const fetchPosts = async () => {
   try {
+    console.log('投稿一覧の取得を開始します', {
+      page: currentPage.value,
+      keyword: keyword.value,
+      tags: tagInput.value,
+      showMyPosts: showMyPosts.value,
+      userId: auth.user?.id
+    })
+
     const params = {
       page: currentPage.value,
       keyword: keyword.value,
-      tags: tagInput.value ? tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+      tags: tagInput.value ? tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+      user_id: showMyPosts.value && auth.user ? auth.user.id : undefined
     }
     
     const response = await axios.get('/api/posts', { 
       params,
       headers: {
-        'Authorization': `Bearer ${auth.token}`
+        'Accept': 'application/json',
+        'Authorization': auth.token ? `Bearer ${auth.token}` : undefined
       }
     })
+
+    console.log('投稿一覧の取得が完了しました', response.data)
+
     posts.value = response.data.data || []
     // ページ数の計算を安全に行う
     const total = response.data.total || 0
     const perPage = response.data.per_page || 10
     totalPages.value = Math.max(1, Math.ceil(total / perPage))
   } catch (error) {
-    console.error('投稿の取得に失敗しました:', error)
+    console.error('投稿の取得に失敗しました:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
     posts.value = []
     totalPages.value = 1
-    throw error // エラーを上位に伝播
+    throw error
   }
 }
 
@@ -130,6 +157,12 @@ const deletePost = async (post) => {
   } catch (error) {
     console.error('投稿の削除に失敗しました:', error)
   }
+}
+
+// 投稿の編集
+const editPost = (post) => {
+  // 親コンポーネントに編集イベントを通知
+  emit('edit', post)
 }
 
 // 投稿者かどうかを判定
@@ -155,10 +188,19 @@ const handleTagInput = () => {
   fetchPosts()
 }
 
+// フィルター変更時の処理
+const handleFilterChange = () => {
+  currentPage.value = 1 // フィルター変更時は1ページ目に戻る
+  fetchPosts()
+}
+
 // コンポーネントの初期化時に投稿を取得
 onMounted(() => {
   fetchPosts()
 })
+
+// イベントの定義
+const emit = defineEmits(['edit'])
 
 // メソッドを外部に公開
 defineExpose({
