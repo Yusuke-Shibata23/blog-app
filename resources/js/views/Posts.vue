@@ -35,11 +35,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAuth } from '@/stores/auth'
 import PostList from '@/components/PostList.vue'
 import PostForm from '@/components/PostForm.vue'
 
-const auth = useAuthStore()
+const auth = useAuth()
 const showPostForm = ref(false)
 const selectedPost = ref(null)
 const postList = ref(null)

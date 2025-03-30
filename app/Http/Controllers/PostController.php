@@ -229,17 +229,40 @@ class PostController extends Controller
     }
 
     /**
-     * Get draft posts.
+     * 下書き一覧を取得
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function drafts()
     {
-        $posts = Post::with(['user', 'images'])
-            ->where('user_id', auth()->id())
-            ->draft()
-            ->latest()
-            ->paginate(10);
+        try {
+            \Log::info('下書き一覧の取得を開始します', [
+                'user' => Auth::user() ? Auth::user()->id : 'guest'
+            ]);
 
-        return response()->json($posts);
+            $posts = Post::with('user')
+                ->where('user_id', Auth::id())
+                ->where('status', 'draft')
+                ->latest()
+                ->paginate(10);
+
+            \Log::info('下書き一覧の取得が完了しました', [
+                'count' => $posts->count(),
+                'total' => $posts->total(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json($posts);
+        } catch (\Exception $e) {
+            \Log::error('下書き一覧の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => '下書き一覧の取得に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -254,5 +277,42 @@ class PostController extends Controller
             ->paginate(10);
 
         return response()->json($posts);
+    }
+
+    /**
+     * 公開中の投稿一覧を取得
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function published()
+    {
+        try {
+            \Log::info('公開中の投稿一覧の取得を開始します', [
+                'user' => Auth::user() ? Auth::user()->id : 'guest'
+            ]);
+
+            $posts = Post::with('user')
+                ->where('user_id', Auth::id())
+                ->where('status', 'published')
+                ->latest()
+                ->paginate(10);
+
+            \Log::info('公開中の投稿一覧の取得が完了しました', [
+                'count' => $posts->count(),
+                'total' => $posts->total(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json($posts);
+        } catch (\Exception $e) {
+            \Log::error('公開中の投稿一覧の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => '公開中の投稿一覧の取得に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 } 

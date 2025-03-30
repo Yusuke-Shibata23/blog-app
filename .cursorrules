@@ -81,5 +81,31 @@
         "require_tests": true,
         "test_location": "tests",
         "coverage_threshold": 80
+    },
+    "development_rules": {
+        "existing_functionality": {
+            "description": "既存機能の保護",
+            "rules": [
+                "既存の機能を壊すような広範な変更は避ける",
+                "コア変数や重要なロジックは慎重に変更する",
+                "変更前に影響範囲を十分に考慮する"
+            ]
+        },
+        "modification_principles": {
+            "description": "修正の原則",
+            "rules": [
+                "問題の本質に焦点を当てる",
+                "必要最小限の修正に留める",
+                "既存のコードパターンを尊重する"
+            ]
+        },
+        "testing_and_verification": {
+            "description": "テストと確認",
+            "rules": [
+                "変更後は既存機能が正常に動作することを確認",
+                "エラーが発生した場合は、影響範囲を特定して修正",
+                "ユーザー体験を損なわないよう注意する"
+            ]
+        }
     }
 } 

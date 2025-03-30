@@ -12,21 +12,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import Navigation from '@/components/Navigation.vue'
+import { useAuth } from './stores/auth'
+import Navigation from './components/Navigation.vue'
 
-const auth = useAuthStore()
+const auth = useAuth()
 const isReady = ref(false)
 
 // アプリケーション起動時に認証状態を確認
 onMounted(async () => {
   try {
-    if (auth.token) {
-      console.log('トークンが存在するため、認証状態を確認します')
-      await auth.checkAuth()
-    } else {
-      console.log('トークンが存在しないため、認証状態の確認をスキップします')
-    }
+    await auth.checkAuth()
     isReady.value = true
   } catch (error) {
     console.error('認証状態の確認に失敗しました:', error)

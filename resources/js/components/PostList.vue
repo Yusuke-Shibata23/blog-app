@@ -1,17 +1,17 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold">投稿一覧</h2>
-      <div class="flex space-x-4">
+  <div class="post-list">
+    <!-- ログインユーザーのみに表示 -->
+    <div v-if="auth.isAuthenticated" class="mb-4">
+      <div class="flex space-x-2">
         <button
           v-for="tab in tabs"
           :key="tab.value"
           @click="currentTab = tab.value"
           :class="[
-            'px-4 py-2 rounded-md text-sm font-medium',
+            'px-4 py-2 rounded-md',
             currentTab === tab.value
-              ? 'bg-indigo-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           ]"
         >
           {{ tab.label }}
@@ -19,99 +19,64 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+    <!-- 投稿一覧 -->
+    <div v-if="loading" class="text-center py-4">
+      読み込み中...
     </div>
-
-    <div v-else-if="posts.length === 0" class="text-center py-8 text-gray-500">
-      投稿がありません
+    <div v-else-if="posts.length === 0" class="text-center py-4">
+      投稿がありません。
     </div>
-
-    <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div v-else class="space-y-4">
       <div
-        v-for="post in posts"
+        v-for="post in filteredPosts"
         :key="post.id"
-        class="bg-white rounded-lg shadow overflow-hidden"
+        class="bg-white rounded-lg shadow-md p-6"
       >
-        <div v-if="post.images && post.images.length > 0" class="relative h-48">
-          <img
-            :src="post.images[0].image_path"
-            :alt="post.title"
-            class="w-full h-full object-cover"
-          />
-          <div
-            v-if="post.images.length > 1"
-            class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm"
-          >
-            +{{ post.images.length - 1 }}
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
+            <p class="text-gray-600 mb-4">{{ post.content }}</p>
+            <div class="flex items-center text-sm text-gray-500">
+              <span>投稿者: {{ post.user?.name || '不明' }}</span>
+              <span class="mx-2">|</span>
+              <span>投稿日: {{ formatDate(post.created_at) }}</span>
+              <span v-if="post.published_at" class="mx-2">|</span>
+              <span v-if="post.published_at">公開日: {{ formatDate(post.published_at) }}</span>
+            </div>
           </div>
-        </div>
-
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold text-gray-900">{{ post.title }}</h3>
-            <span
-              :class="[
-                'px-2 py-1 text-xs font-medium rounded-full',
-                getStatusClass(post.status)
-              ]"
+          <!-- ログインユーザーのみに表示 -->
+          <div v-if="auth.isAuthenticated" class="flex space-x-2">
+            <button
+              @click="$emit('edit', post)"
+              class="text-blue-600 hover:text-blue-800"
             >
-              {{ getStatusLabel(post.status) }}
-            </span>
-          </div>
-
-          <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ post.content }}</p>
-
-          <div class="flex items-center justify-between text-sm text-gray-500">
-            <div class="flex items-center space-x-2">
-              <span>{{ post.user.name }}</span>
-              <span>•</span>
-              <span>{{ formatDate(post.created_at) }}</span>
-            </div>
-
-            <div class="flex items-center space-x-2">
-              <button
-                v-if="post.status === 'draft'"
-                @click="publishPost(post)"
-                class="text-green-600 hover:text-green-700"
-              >
-                公開
-              </button>
-              <button
-                @click="$emit('edit', post)"
-                class="text-indigo-600 hover:text-indigo-700"
-              >
-                編集
-              </button>
-              <button
-                @click="deletePost(post)"
-                class="text-red-600 hover:text-red-700"
-              >
-                削除
-              </button>
-            </div>
+              編集
+            </button>
+            <button
+              @click="handleDelete(post)"
+              class="text-red-600 hover:text-red-800"
+            >
+              削除
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="posts.length > 0" class="flex justify-center mt-6">
+    <!-- ページネーション -->
+    <div v-if="auth.isAuthenticated && totalPages > 1" class="mt-4 flex justify-center">
       <button
-        v-if="currentPage > 1"
-        @click="currentPage--"
-        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        v-for="page in totalPages"
+        :key="page"
+        @click="currentPage = page"
+        :class="[
+          'mx-1 px-3 py-1 rounded',
+          currentPage === page
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        ]"
       >
-        前へ
-      </button>
-      <span class="px-4 py-2 text-sm text-gray-700">
-        {{ currentPage }} / {{ totalPages }}
-      </span>
-      <button
-        v-if="currentPage < totalPages"
-        @click="currentPage++"
-        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-      >
-        次へ
+        {{ page }}
       </button>
     </div>
   </div>
@@ -120,11 +85,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
+import { useAuth } from '../stores/auth';
 
 const props = defineProps({
   userId: {
     type: Number,
-    required: true
+    required: false
   }
 });
 
@@ -138,9 +104,31 @@ const currentTab = ref('all');
 
 const tabs = [
   { label: 'すべて', value: 'all' },
+  { label: '公開中', value: 'published' },
   { label: '下書き', value: 'draft' },
   { label: '予約投稿', value: 'scheduled' }
 ];
+
+const auth = useAuth();
+
+// フィルタリングされた投稿一覧を計算
+const filteredPosts = computed(() => {
+  // nullの投稿を除外
+  const validPosts = posts.value.filter(post => post !== null);
+
+  if (!auth.isAuthenticated) {
+    return validPosts.filter(post => post.status === 'published');
+  }
+
+  switch (currentTab.value) {
+    case 'draft':
+      return validPosts.filter(post => post.status === 'draft');
+    case 'scheduled':
+      return validPosts.filter(post => post.status === 'scheduled');
+    default:
+      return validPosts;
+  }
+});
 
 const fetchPosts = async () => {
   try {
@@ -153,6 +141,9 @@ const fetchPosts = async () => {
         break;
       case 'scheduled':
         url = '/api/posts/scheduled';
+        break;
+      case 'published':
+        url = '/api/posts/published';
         break;
     }
 
@@ -167,6 +158,7 @@ const fetchPosts = async () => {
     totalPages.value = response.data.last_page;
   } catch (error) {
     console.error('投稿の取得に失敗しました:', error);
+    alert('投稿の取得に失敗しました。');
   } finally {
     loading.value = false;
   }

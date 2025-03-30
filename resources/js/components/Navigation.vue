@@ -58,19 +58,21 @@
 </template>
 
 <script setup>
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue';
+import { useAuth } from '../stores/auth';
 
-const auth = useAuthStore()
-const router = useRouter()
+const isMenuOpen = ref(false);
+const auth = useAuth();
+
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
 
 const handleLogout = async () => {
   try {
-    await auth.logout()
-    router.push('/login')
+    await auth.logout();
   } catch (error) {
-    console.error('ログアウトに失敗しました:', error)
-    alert('ログアウトに失敗しました。')
+    console.error('ログアウトに失敗しました:', error);
   }
-}
+};
 </script> 

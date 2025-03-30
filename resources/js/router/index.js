@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuth } from '@/stores/auth';
 import Home from '@/views/Home.vue';
 import Login from '@/views/Login.vue';
 import Register from '@/views/Register.vue';
@@ -40,7 +40,7 @@ const router = createRouter({
 
 // ナビゲーションガード
 router.beforeEach((to, from, next) => {
-  const auth = useAuthStore();
+  const auth = useAuth();
   
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next('/login');
