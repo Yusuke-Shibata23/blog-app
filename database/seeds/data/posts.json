@@ -1,0 +1,172 @@
+{
+    "posts": [
+        {
+            "title": "京都の古寺巡り - 秋の紅葉と古都の魅力",
+            "slug": "kyoto-temple-tour",
+            "excerpt": "秋の京都で訪れた古寺の数々。紅葉に染まる庭園と、静寂の空間で感じた日本の美しさについて綴ります。",
+            "content_file": "01-kyoto-temple-tour.md",
+            "published_at": "2024-03-15 10:00:00",
+            "author_email": "yamada@example.com",
+            "tags": ["旅行", "京都", "紅葉", "古寺"],
+            "images": [
+                {
+                    "filename": "kyoto-temple-1.jpg",
+                    "alt": "金閣寺の紅葉",
+                    "caption": "金閣寺の庭園に広がる紅葉の風景"
+                },
+                {
+                    "filename": "kyoto-temple-2.jpg",
+                    "alt": "清水寺の舞台",
+                    "caption": "清水寺の舞台から見下ろす京都市街"
+                }
+            ]
+        },
+        {
+            "title": "家庭で作る本格イタリアン - パスタの基本と応用",
+            "slug": "italian-pasta-basics",
+            "excerpt": "イタリア料理の基本となるパスタの作り方から、様々なソースの組み合わせまで。家庭で楽しめる本格的なレシピを紹介します。",
+            "content_file": "02-italian-pasta-basics.md",
+            "published_at": "2024-03-16 11:00:00",
+            "author_email": "suzuki@example.com",
+            "tags": ["料理", "イタリアン", "パスタ", "レシピ"],
+            "images": [
+                {
+                    "filename": "pasta-1.jpg",
+                    "alt": "手作りパスタ",
+                    "caption": "手作りパスタの生地作り"
+                },
+                {
+                    "filename": "pasta-2.jpg",
+                    "alt": "完成したパスタ",
+                    "caption": "完成したカルボナーラ"
+                }
+            ]
+        },
+        {
+            "title": "『インターステラー』 - 時を超えた愛と希望の物語",
+            "slug": "interstellar-review",
+            "excerpt": "クリストファー・ノーラン監督の傑作『インターステラー』。時空を超えた壮大なスケールと、人間の愛の本質を描いた作品を解説します。",
+            "content_file": "03-interstellar-review.md",
+            "published_at": "2024-03-17 12:00:00",
+            "author_email": "sato@example.com",
+            "tags": ["映画", "SF", "ノーラン", "レビュー"],
+            "images": [
+                {
+                    "filename": "interstellar-1.jpg",
+                    "alt": "インターステラーのポスター",
+                    "caption": "映画『インターステラー』のポスター"
+                },
+                {
+                    "filename": "interstellar-2.jpg",
+                    "alt": "宇宙船のシーン",
+                    "caption": "エンダランス号の印象的なシーン"
+                }
+            ]
+        },
+        {
+            "title": "ジャズの夜 - ビル・エバンスの世界",
+            "slug": "bill-evans-jazz",
+            "excerpt": "ジャズピアニスト、ビル・エバンスの音楽世界を探る。その独特のハーモニーと繊細なタッチが織りなす美しい音色について。",
+            "content_file": "04-bill-evans-jazz.md",
+            "published_at": "2024-03-18 13:00:00",
+            "author_email": "yamada@example.com",
+            "tags": ["音楽", "ジャズ", "ピアノ", "ビル・エバンス"],
+            "images": [
+                {
+                    "filename": "bill-evans-1.jpg",
+                    "alt": "ビル・エバンスのポートレート",
+                    "caption": "ビル・エバンスのポートレート写真"
+                },
+                {
+                    "filename": "bill-evans-2.jpg",
+                    "alt": "ピアノ演奏",
+                    "caption": "ピアノを演奏するビル・エバンス"
+                }
+            ]
+        },
+        {
+            "title": "風景写真の撮影テクニック - 光と構図の基本",
+            "slug": "landscape-photography",
+            "excerpt": "美しい風景写真を撮るための基本的なテクニック。光の使い方から構図の決め方まで、実践的なアドバイスを紹介します。",
+            "content_file": "05-landscape-photography.md",
+            "published_at": "2024-03-19 14:00:00",
+            "author_email": "suzuki@example.com",
+            "tags": ["写真", "風景", "カメラ", "テクニック"],
+            "images": [
+                {
+                    "filename": "landscape-1.jpg",
+                    "alt": "風景写真の例",
+                    "caption": "ゴールデンアワーに撮影した山々"
+                },
+                {
+                    "filename": "landscape-2.jpg",
+                    "alt": "構図の例",
+                    "caption": "三分割法を用いた構図例"
+                }
+            ]
+        },
+        {
+            "title": "ヨガで始める心身の健康 - 初心者向けポーズガイド",
+            "slug": "yoga-basics",
+            "excerpt": "ヨガを始めたい方へ。基本的なポーズから呼吸法まで、自宅でできる簡単なヨガの実践方法を紹介します。",
+            "content_file": "06-yoga-basics.md",
+            "published_at": "2024-03-20 15:00:00",
+            "author_email": "sato@example.com",
+            "tags": ["健康", "ヨガ", "フィットネス", "初心者"],
+            "images": [
+                {
+                    "filename": "yoga-1.jpg",
+                    "alt": "ヨガポーズ",
+                    "caption": "基本的なヨガポーズの例"
+                },
+                {
+                    "filename": "yoga-2.jpg",
+                    "alt": "呼吸法",
+                    "caption": "ヨガの呼吸法の説明"
+                }
+            ]
+        },
+        {
+            "title": "『三体』を読む - 中国SFの金字塔",
+            "slug": "three-body-problem",
+            "excerpt": "劉慈欣の『三体』三部作を読む。人類の運命を賭けた壮大なSF作品の魅力と、その深い哲学的考察について。",
+            "content_file": "07-three-body-problem.md",
+            "published_at": "2024-03-21 16:00:00",
+            "author_email": "yamada@example.com",
+            "tags": ["本", "SF", "中国文学", "書評"],
+            "images": [
+                {
+                    "filename": "three-body-1.jpg",
+                    "alt": "三体の表紙",
+                    "caption": "『三体』の表紙"
+                },
+                {
+                    "filename": "three-body-2.jpg",
+                    "alt": "作者の写真",
+                    "caption": "劉慈欣のポートレート"
+                }
+            ]
+        },
+        {
+            "title": "現代アートの世界 - 草間彌生展レポート",
+            "slug": "kusama-exhibition",
+            "excerpt": "草間彌生の大規模回顧展を訪れて。その独特の世界観と、アートを通じて伝えるメッセージについて考察します。",
+            "content_file": "08-kusama-exhibition.md",
+            "published_at": "2024-03-22 17:00:00",
+            "author_email": "suzuki@example.com",
+            "tags": ["アート", "展覧会", "草間彌生", "現代アート"],
+            "images": [
+                {
+                    "filename": "kusama-1.jpg",
+                    "alt": "展示作品",
+                    "caption": "草間彌生の代表的な作品"
+                },
+                {
+                    "filename": "kusama-2.jpg",
+                    "alt": "展示会場",
+                    "caption": "展示会場の様子"
+                }
+            ]
+        }
+    ]
+} 
