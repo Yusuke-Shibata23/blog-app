@@ -7,12 +7,19 @@
         v-for="(tool, index) in toolbarTools"
         :key="index"
         type="button"
-        @click="insertMarkdown(tool.insert)"
+        @click="tool.type === 'image' ? imageInput.click() : insertMarkdown(tool.insert)"
         class="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         :title="tool.title"
       >
         {{ tool.label }}
       </button>
+      <input
+        ref="imageInput"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="handleImageUpload"
+      />
     </div>
 
     <!-- エディターとプレビューのコンテナ -->
@@ -37,11 +44,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
 import { useDebounceFn } from '@vueuse/core'
+import axios from 'axios'
+import { useAuth } from '../stores/auth'
 
 // Props
 const props = defineProps({
@@ -58,6 +67,7 @@ const emit = defineEmits(['update:modelValue'])
 const editor = ref(null)
 const content = ref(props.modelValue)
 const previewContent = ref('')
+const auth = useAuth()
 
 // ツールバーの設定
 const toolbarTools = [
@@ -71,8 +81,11 @@ const toolbarTools = [
   { label: '引用', title: '引用を挿入', insert: '> ' },
   { label: 'コード', title: 'コードブロックを挿入', insert: '```\nコード\n```' },
   { label: 'リンク', title: 'リンクを挿入', insert: '[リンクテキスト](URL)' },
-  { label: '画像', title: '画像を挿入', insert: '![代替テキスト](画像URL)' }
+  { label: '画像', title: '画像を挿入', insert: '![代替テキスト](画像URL)', type: 'image' }
 ]
+
+// 画像アップロード用のref
+const imageInput = ref(null)
 
 // markedの設定
 marked.setOptions({
@@ -89,6 +102,47 @@ marked.setOptions({
 const updatePreview = useDebounceFn(() => {
   previewContent.value = marked(content.value)
 }, 300)
+
+// 画像アップロード処理
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('認証が必要です。ログインしてください。')
+    }
+
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const response = await axios.post('/api/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.data.url) {
+      throw new Error('画像のURLが取得できませんでした。')
+    }
+
+    // 画像のMarkdown記法を挿入
+    const imageMarkdown = `![${file.name}](${response.data.url})`
+    insertMarkdown(imageMarkdown)
+
+    // ファイル入力をリセット
+    event.target.value = ''
+  } catch (error) {
+    console.error('画像のアップロードに失敗しました:', error)
+    if (error.message === '認証が必要です。ログインしてください。') {
+      alert('画像のアップロードにはログインが必要です。')
+    } else {
+      alert(error.response?.data?.message || '画像のアップロードに失敗しました。')
+    }
+  }
+}
 
 // マークダウンの挿入
 const insertMarkdown = (text) => {
