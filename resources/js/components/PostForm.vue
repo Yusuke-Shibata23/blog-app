@@ -102,7 +102,7 @@
       <div class="flex justify-end space-x-4">
         <button
           type="button"
-          @click="$emit('cancel')"
+          @click="handleCancel"
           class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           キャンセル
@@ -119,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import MarkdownEditor from './MarkdownEditor.vue'
 
@@ -136,7 +136,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close', 'success']);
+const emit = defineEmits(['close', 'success', 'update:modelValue', 'cancel']);
 
 const loading = ref(false);
 const imageInput = ref(null);
@@ -146,7 +146,8 @@ const form = ref({
   content: props.post.content,
   status: props.post.status,
   scheduled_at: props.post.scheduled_at,
-  images: props.post.images || []
+  images: props.post.images || [],
+  is_scheduled: false
 });
 
 const isEditing = computed(() => !!props.post.id);
@@ -172,6 +173,22 @@ const removeImage = (index) => {
   form.value.images.splice(index, 1);
 };
 
+// フォームの変更を監視（プレビュー用）
+watch(
+  () => ({
+    title: form.value.title,
+    content: form.value.content,
+    status: form.value.status,
+    scheduled_at: form.value.scheduled_at
+  }),
+  (newValue) => {
+    // プレビューの更新のみを行う
+    emit('update:modelValue', newValue);
+  },
+  { deep: true }
+);
+
+// フォームの送信処理
 const handleSubmit = async () => {
   try {
     loading.value = true;
@@ -187,12 +204,23 @@ const handleSubmit = async () => {
       formData.append('scheduled_at', form.value.scheduled_at);
     }
 
-    // 新しい画像の追加
-    form.value.images.forEach((image, index) => {
-      if (image.file) {
-        formData.append(`images[${index}]`, image.file);
-      }
-    });
+    // 画像の処理
+    if (form.value.images) {
+      form.value.images.forEach((image, index) => {
+        if (image.file) {
+          formData.append(`images[${index}]`, image.file);
+        } else if (typeof image === 'string') {
+          formData.append(`existing_images[${index}]`, image);
+        }
+      });
+    }
+
+    // 削除対象の画像IDを追加
+    if (form.value.deletedImages) {
+      form.value.deletedImages.forEach((id, index) => {
+        formData.append(`deleted_images[${index}]`, id);
+      });
+    }
 
     // デバッグ用のログ
     console.log('送信するデータ:', {
@@ -200,7 +228,8 @@ const handleSubmit = async () => {
       content: form.value.content,
       status: form.value.status,
       scheduled_at: form.value.scheduled_at,
-      images: form.value.images
+      images: form.value.images,
+      deletedImages: form.value.deletedImages
     });
 
     // FormDataの内容を確認
@@ -248,6 +277,12 @@ const handleSubmit = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// キャンセル処理
+const handleCancel = () => {
+  emit('cancel');
+  emit('close');
 };
 </script>
 

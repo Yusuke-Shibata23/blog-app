@@ -6,6 +6,7 @@
       <button
         v-for="(tool, index) in toolbarTools"
         :key="index"
+        type="button"
         @click="insertMarkdown(tool.insert)"
         class="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         :title="tool.title"
