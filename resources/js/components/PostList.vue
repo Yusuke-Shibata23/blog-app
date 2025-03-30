@@ -59,7 +59,7 @@
     <!-- ページネーション -->
     <div class="mt-4 flex justify-center gap-2">
       <button
-        v-for="page in totalPages"
+        v-for="page in Math.max(1, totalPages)"
         :key="page"
         @click="changePage(page)"
         :class="[
@@ -94,14 +94,25 @@ const fetchPosts = async () => {
     const params = {
       page: currentPage.value,
       keyword: keyword.value,
-      tags: tagInput.value ? tagInput.value.split(',').map(tag => tag.trim()) : []
+      tags: tagInput.value ? tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag) : []
     }
     
-    const response = await axios.get('/api/posts', { params })
-    posts.value = response.data.data
-    totalPages.value = Math.ceil(response.data.total / response.data.per_page)
+    const response = await axios.get('/api/posts', { 
+      params,
+      headers: {
+        'Authorization': `Bearer ${auth.token}`
+      }
+    })
+    posts.value = response.data.data || []
+    // ページ数の計算を安全に行う
+    const total = response.data.total || 0
+    const perPage = response.data.per_page || 10
+    totalPages.value = Math.max(1, Math.ceil(total / perPage))
   } catch (error) {
     console.error('投稿の取得に失敗しました:', error)
+    posts.value = []
+    totalPages.value = 1
+    throw error // エラーを上位に伝播
   }
 }
 
@@ -110,7 +121,11 @@ const deletePost = async (post) => {
   if (!confirm('この投稿を削除してもよろしいですか？')) return
 
   try {
-    await axios.delete(`/api/posts/${post.id}`)
+    await axios.delete(`/api/posts/${post.id}`, {
+      headers: {
+        'Authorization': `Bearer ${auth.token}`
+      }
+    })
     await fetchPosts()
   } catch (error) {
     console.error('投稿の削除に失敗しました:', error)
@@ -140,8 +155,14 @@ const handleTagInput = () => {
   fetchPosts()
 }
 
+// コンポーネントの初期化時に投稿を取得
 onMounted(() => {
   fetchPosts()
+})
+
+// メソッドを外部に公開
+defineExpose({
+  fetchPosts
 })
 </script>
 

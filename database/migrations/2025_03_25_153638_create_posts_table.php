@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('content');
-            $table->string('tags')->nullable(); // タグ用のカラム
+            $table->json('tags')->nullable(); // タグ用のカラムをJSON型に変更
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ユーザーとの関連
             $table->timestamps();
         });

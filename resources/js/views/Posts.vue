@@ -14,12 +14,13 @@
     <!-- 投稿フォームモーダル -->
     <div
       v-if="showPostForm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center"
     >
       <div class="bg-white rounded-lg w-full max-w-2xl">
         <PostForm
           :post="selectedPost"
           @submit="handlePostSubmit"
+          @success="handlePostSuccess"
           @cancel="closePostForm"
         />
       </div>
@@ -27,13 +28,14 @@
 
     <!-- 投稿一覧 -->
     <PostList
+      ref="postList"
       @edit="handleEditPost"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import PostList from '@/components/PostList.vue'
 import PostForm from '@/components/PostForm.vue'
@@ -41,6 +43,14 @@ import PostForm from '@/components/PostForm.vue'
 const auth = useAuthStore()
 const showPostForm = ref(false)
 const selectedPost = ref(null)
+const postList = ref(null)
+
+// 認証状態の確認
+onMounted(async () => {
+  if (!auth.isAuthenticated) {
+    await auth.checkAuth()
+  }
+})
 
 // 投稿フォームを閉じる
 const closePostForm = () => {
@@ -50,10 +60,22 @@ const closePostForm = () => {
 
 // 投稿の保存完了時の処理
 const handlePostSubmit = () => {
-  closePostForm()
-  // PostListコンポーネントの投稿一覧を更新
-  const postList = document.querySelector('.post-list').__vueParentComponent.ctx
-  postList.fetchPosts()
+  // フォームはhandlePostSuccessで閉じるため、ここでは何もしない
+}
+
+// 投稿の保存成功時の処理
+const handlePostSuccess = async () => {
+  try {
+    if (postList.value) {
+      await postList.value.fetchPosts()
+      closePostForm() // フォームを閉じる
+    } else {
+      console.error('PostListコンポーネントが見つかりません')
+    }
+  } catch (error) {
+    console.error('投稿一覧の更新に失敗しました:', error)
+    alert('投稿一覧の更新に失敗しました。')
+  }
 }
 
 // 投稿の編集

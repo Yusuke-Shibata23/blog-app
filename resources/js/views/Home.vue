@@ -1,6 +1,14 @@
 <template>
-  <div>
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">ブログ一覧</h1>
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">ブログ一覧</h1>
+      <router-link
+        to="/posts"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+      >
+        投稿一覧を見る
+      </router-link>
+    </div>
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <!-- 仮のブログ投稿データ -->
       <div v-for="i in 3" :key="i" class="bg-white rounded-lg shadow-md p-6">

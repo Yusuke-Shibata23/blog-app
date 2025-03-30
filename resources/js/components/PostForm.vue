@@ -61,6 +61,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 const props = defineProps({
   post: {
@@ -69,7 +72,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['submit', 'cancel'])
+const emit = defineEmits(['submit', 'cancel', 'success'])
 
 const form = ref({
   title: '',
@@ -83,22 +86,60 @@ const isEditing = computed(() => !!props.post)
 
 // フォームの送信処理
 const handleSubmit = async () => {
-  form.value.tags = tagsInput.value
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(tag => tag)
-
   try {
-    const endpoint = isEditing.value
-      ? `/api/posts/${props.post.id}`
-      : '/api/posts'
-    
-    const method = isEditing.value ? 'put' : 'post'
-    
-    const response = await axios[method](endpoint, form.value)
+    // タグの処理
+    const processedTags = tagsInput.value
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag)
+
+    const postData = {
+      title: form.value.title,
+      content: form.value.content,
+      tags: processedTags
+    }
+
+    console.log('Sending post data:', postData)
+
+    let response
+    if (props.post) {
+      response = await axios.put(`/api/posts/${props.post.id}`, postData, {
+        headers: {
+          'Authorization': `Bearer ${auth.token}`
+        }
+      })
+    } else {
+      response = await axios.post('/api/posts', postData, {
+        headers: {
+          'Authorization': `Bearer ${auth.token}`
+        }
+      })
+    }
+
+    // 成功時の処理
     emit('submit', response.data)
+    emit('success')
+
+    // フォームをリセット
+    form.value = {
+      title: '',
+      content: '',
+      tags: []
+    }
+    tagsInput.value = ''
   } catch (error) {
-    console.error('投稿の保存に失敗しました:', error)
+    console.error('投稿の保存に失敗しました:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
+    
+    // エラーメッセージを表示
+    const errorMessage = error.response?.data?.message || 
+                        error.response?.data?.error || 
+                        error.message || 
+                        '投稿の保存に失敗しました。'
+    alert(errorMessage)
   }
 }
 

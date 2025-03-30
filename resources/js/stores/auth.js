@@ -67,6 +67,18 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('ユーザー情報の取得に失敗しました:', error)
       }
+    },
+
+    async checkAuth() {
+      if (this.token) {
+        try {
+          await this.fetchUser()
+          axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+        } catch (error) {
+          console.error('認証状態の確認に失敗しました:', error)
+          this.logout()
+        }
+      }
     }
   }
 }) 

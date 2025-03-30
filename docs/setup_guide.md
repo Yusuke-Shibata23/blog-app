@@ -117,3 +117,7 @@ php artisan key:generate
 git remote add origin https://github.com/Yusuke-Shibata23/blog-app.git
 git branch -M main
 git push -u origin main 
+
+
+php artisan serve
+npm run dev
