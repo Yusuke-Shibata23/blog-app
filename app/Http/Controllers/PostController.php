@@ -165,41 +165,54 @@ class PostController extends Controller
             \Log::info('投稿の更新を開始します', [
                 'post_id' => $post->id,
                 'user_id' => auth()->id(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
+                'request_files' => $request->allFiles(),
+                'request_headers' => $request->headers->all()
             ]);
 
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'status' => 'required|in:draft,published',
-                'published_at' => 'nullable|date',
-                'scheduled_at' => 'nullable|date|after:now',
-                'images.*' => 'nullable|image|max:2048'
+                'images.*' => 'nullable|file|mimes:jpeg,png,gif|max:10240'
+            ], [
+                'title.required' => 'タイトルは必須です。',
+                'title.max' => 'タイトルは255文字以内で入力してください。',
+                'content.required' => '内容は必須です。',
+                'status.required' => 'ステータスは必須です。',
+                'status.in' => '無効なステータスです。',
+                'images.*.file' => '画像ファイルをアップロードしてください。',
+                'images.*.mimes' => '画像はJPEG、PNG、GIF形式のみアップロード可能です。',
+                'images.*.max' => '画像サイズは10MB以下にしてください。'
             ]);
 
             if ($validator->fails()) {
                 \Log::warning('バリデーションエラー', [
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
+                    'request_data' => $request->all()
                 ]);
-                return response()->json(['errors' => $validator->errors()], 422);
+                return response()->json([
+                    'message' => '入力内容に問題があります。',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
-            $post->update([
-                'title' => $request->title,
-                'content' => $request->content,
-                'status' => $request->status,
-                'published_at' => $request->published_at,
-                'scheduled_at' => $request->scheduled_at
-            ]);
+            // Markdownコンテンツの処理
+            $content = $request->content;
+            
+            // 画像の処理
+            if ($request->has('deleted_image_ids')) {
+                $deletedImageIds = json_decode($request->deleted_image_ids, true);
+                foreach ($deletedImageIds as $imageId) {
+                    $image = $post->images()->find($imageId);
+                    if ($image) {
+                        Storage::disk('public')->delete($image->image_path);
+                        $image->delete();
+                    }
+                }
+            }
 
             if ($request->hasFile('images')) {
-                // 既存の画像を削除
-                foreach ($post->images as $image) {
-                    Storage::disk('public')->delete($image->image_path);
-                    $image->delete();
-                }
-
-                // 新しい画像を保存
                 foreach ($request->file('images') as $index => $image) {
                     $path = $image->store('post-images', 'public');
                     $post->images()->create([
@@ -208,6 +221,12 @@ class PostController extends Controller
                     ]);
                 }
             }
+
+            $post->update([
+                'title' => $request->title,
+                'content' => $content,
+                'status' => $request->status
+            ]);
 
             \Log::info('投稿の更新が完了しました', [
                 'post_id' => $post->id

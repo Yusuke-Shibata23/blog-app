@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white shadow rounded-lg p-6">
+  <div class="max-w-4xl mx-auto p-4">
     <h2 class="text-2xl font-bold mb-6">{{ isEditing ? '投稿を編集' : '新規投稿' }}</h2>
     
     <form @submit.prevent="handleSubmit" class="space-y-6">
@@ -9,20 +9,72 @@
           type="text"
           id="title"
           v-model="form.title"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           required
         />
       </div>
 
       <div>
-        <label for="content" class="block text-sm font-medium text-gray-700">本文</label>
-        <textarea
-          id="content"
+        <label for="content" class="block text-sm font-medium text-gray-700">内容</label>
+        <MarkdownEditor
           v-model="form.content"
-          rows="6"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        ></textarea>
+          class="mt-1"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">画像</label>
+        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+          <div class="space-y-1 text-center">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              stroke="currentColor"
+              fill="none"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div class="flex text-sm text-gray-600">
+              <label
+                for="images"
+                class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+              >
+                <span>画像をアップロード</span>
+                <input
+                  id="images"
+                  name="images"
+                  type="file"
+                  class="sr-only"
+                  multiple
+                  accept="image/*"
+                  @change="handleImageChange"
+                />
+              </label>
+              <p class="pl-1">またはドラッグ＆ドロップ</p>
+            </div>
+            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+          </div>
+        </div>
+        <div v-if="form.images.length > 0" class="mt-4 grid grid-cols-2 gap-4">
+          <div v-for="(image, index) in form.images" :key="index" class="relative">
+            <img :src="image.url" class="w-full h-32 object-cover rounded-lg" />
+            <button
+              type="button"
+              @click="removeImage(index)"
+              class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -30,7 +82,7 @@
         <select
           id="status"
           v-model="form.status"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         >
           <option value="draft">下書き</option>
           <option value="published">公開</option>
@@ -47,48 +99,10 @@
         />
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">画像</label>
-        <div class="mt-1 flex items-center space-x-4">
-          <div v-for="(image, index) in form.images" :key="index" class="relative">
-            <img
-              :src="image.preview || image.image_path"
-              class="h-32 w-32 object-cover rounded-lg"
-              alt="投稿画像"
-            />
-            <button
-              type="button"
-              @click="removeImage(index)"
-              class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-            >
-              ×
-            </button>
-          </div>
-          <div v-if="form.images.length < 5" class="relative">
-            <input
-              type="file"
-              accept="image/*"
-              @change="handleImageUpload"
-              class="hidden"
-              ref="imageInput"
-            />
-            <button
-              type="button"
-              @click="$refs.imageInput.click()"
-              class="h-32 w-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500 hover:border-indigo-500 hover:text-indigo-500"
-            >
-              <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div class="flex justify-end space-x-4">
         <button
           type="button"
-          @click="handleCancel"
+          @click="$emit('cancel')"
           class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           キャンセル
@@ -96,9 +110,8 @@
         <button
           type="submit"
           class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          :disabled="loading"
         >
-          {{ loading ? '保存中...' : (isEditing ? '更新' : '投稿') }}
+          {{ isEditing ? '更新' : '作成' }}
         </button>
       </div>
     </form>
@@ -108,6 +121,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import MarkdownEditor from './MarkdownEditor.vue'
 
 const props = defineProps({
   post: {
@@ -137,35 +151,25 @@ const form = ref({
 
 const isEditing = computed(() => !!props.post.id);
 
-const handleImageUpload = (event) => {
+const handleImageChange = (event) => {
   const files = event.target.files;
-  if (files.length > 0) {
-    const file = files[0];
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      form.value.images.push({
-        file,
-        preview: e.target.result
-      });
-    };
-    reader.readAsDataURL(file);
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        form.value.images.push({
+          file,
+          url: e.target.result
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   }
 };
 
 const removeImage = (index) => {
   form.value.images.splice(index, 1);
-};
-
-const handleCancel = () => {
-  // フォームをリセット
-  form.value = {
-    title: props.post.title,
-    content: props.post.content,
-    status: props.post.status,
-    scheduled_at: props.post.scheduled_at,
-    images: props.post.images || []
-  };
-  emit('close');
 };
 
 const handleSubmit = async () => {
