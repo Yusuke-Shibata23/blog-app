@@ -26,7 +26,7 @@
     </div>
 
     <!-- 投稿一覧 -->
-    <PostList
+    <MyPosts
       ref="postList"
       @edit="handleEditPost"
     />
@@ -36,7 +36,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuth } from '@/stores/auth'
-import PostList from '@/components/PostList.vue'
+import MyPosts from '@/components/MyPosts.vue'
 import PostForm from '@/components/PostForm.vue'
 
 const auth = useAuth()
@@ -68,6 +68,9 @@ const handlePostSuccess = async (updatedPost) => {
     // モーダルを閉じる
     showPostForm.value = false;
     selectedPost.value = null;
+    
+    // 投稿一覧を再取得
+    await postList.value.fetchPosts();
     
     // 成功メッセージを表示
     alert('投稿を保存しました。');

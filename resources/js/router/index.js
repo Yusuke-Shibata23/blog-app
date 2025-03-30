@@ -1,49 +1,52 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuth } from '@/stores/auth';
-import Home from '@/views/Home.vue';
-import Login from '@/views/Login.vue';
-import Register from '@/views/Register.vue';
-import Posts from '@/views/Posts.vue';
 
-// ルートの定義
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: Home,
+    component: () => import('../views/Home.vue')
   },
   {
     path: '/login',
     name: 'login',
-    component: Login,
+    component: () => import('../views/Login.vue')
   },
   {
     path: '/register',
     name: 'register',
-    component: Register,
+    component: () => import('../views/Register.vue')
   },
   {
     path: '/posts',
     name: 'posts',
-    component: Posts,
-    meta: {
-      requiresAuth: false // 未認証ユーザーも閲覧可能
-    }
+    component: () => import('../views/Posts.vue'),
+    meta: { requiresAuth: true }
   },
+  {
+    path: '/posts/:id',
+    name: 'post-detail',
+    component: () => import('../views/PostDetail.vue')
+  }
 ];
 
 // ルーターの作成
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 });
 
 // ナビゲーションガード
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const auth = useAuth();
   
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    next('/login');
+    await auth.checkAuth();
+    if (!auth.isAuthenticated) {
+      next('/login');
+    } else {
+      next();
+    }
   } else {
     next();
   }

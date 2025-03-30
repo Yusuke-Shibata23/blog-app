@@ -1,5 +1,7 @@
 <template>
-  <div class="post-list">
+  <div class="my-posts">
+    <h2 class="text-2xl font-bold mb-4">マイページ</h2>
+    
     <!-- ログインユーザーのみに表示 -->
     <div v-if="auth.isAuthenticated" class="mb-4">
       <div class="flex space-x-2">
@@ -28,14 +30,15 @@
     </div>
     <div v-else class="space-y-4">
       <div
-        v-for="post in filteredPosts"
+        v-for="post in posts"
         :key="post.id"
-        class="bg-white rounded-lg shadow-md p-6"
+        class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+        @click="handlePostClick(post)"
       >
         <div class="flex justify-between items-start">
-          <div>
+          <div class="flex-1">
             <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
-            <p class="text-gray-600 mb-4">{{ post.content }}</p>
+            <p class="text-gray-600 mb-4 line-clamp-3">{{ post.content }}</p>
             <div class="flex items-center text-sm text-gray-500">
               <span>投稿者: {{ post.user?.name || '不明' }}</span>
               <span class="mx-2">|</span>
@@ -45,15 +48,15 @@
             </div>
           </div>
           <!-- ログインユーザーのみに表示 -->
-          <div v-if="auth.isAuthenticated" class="flex space-x-2">
+          <div v-if="auth.isAuthenticated" class="flex space-x-2 ml-4">
             <button
-              @click="$emit('edit', post)"
+              @click.stop="$emit('edit', post)"
               class="text-blue-600 hover:text-blue-800"
             >
               編集
             </button>
             <button
-              @click="handleDelete(post)"
+              @click.stop="handleDelete(post)"
               class="text-red-600 hover:text-red-800"
             >
               削除
@@ -83,7 +86,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, defineExpose } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuth } from '../stores/auth';
 
@@ -95,6 +99,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['edit']);
+
+const router = useRouter();
 
 const loading = ref(false);
 const posts = ref([]);
@@ -111,29 +117,10 @@ const tabs = [
 
 const auth = useAuth();
 
-// フィルタリングされた投稿一覧を計算
-const filteredPosts = computed(() => {
-  // nullの投稿を除外
-  const validPosts = posts.value.filter(post => post !== null);
-
-  if (!auth.isAuthenticated) {
-    return validPosts.filter(post => post.status === 'published');
-  }
-
-  switch (currentTab.value) {
-    case 'draft':
-      return validPosts.filter(post => post.status === 'draft');
-    case 'scheduled':
-      return validPosts.filter(post => post.status === 'scheduled');
-    default:
-      return validPosts;
-  }
-});
-
 const fetchPosts = async () => {
   try {
     loading.value = true;
-    let url = '/api/posts';
+    let url = '/api/posts/my';
     
     switch (currentTab.value) {
       case 'draft':
@@ -164,28 +151,6 @@ const fetchPosts = async () => {
   }
 };
 
-const getStatusClass = (status) => {
-  switch (status) {
-    case 'published':
-      return 'bg-green-100 text-green-800';
-    case 'draft':
-      return 'bg-gray-100 text-gray-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getStatusLabel = (status) => {
-  switch (status) {
-    case 'published':
-      return '公開中';
-    case 'draft':
-      return '下書き';
-    default:
-      return status;
-  }
-};
-
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ja-JP', {
     year: 'numeric',
@@ -194,23 +159,7 @@ const formatDate = (date) => {
   });
 };
 
-const publishPost = async (post) => {
-  if (!confirm('この投稿を公開しますか？')) return;
-
-  try {
-    await axios.put(`/api/posts/${post.id}`, {
-      ...post,
-      status: 'published',
-      published_at: new Date().toISOString()
-    });
-    await fetchPosts();
-  } catch (error) {
-    console.error('投稿の公開に失敗しました:', error);
-    alert('投稿の公開に失敗しました。');
-  }
-};
-
-const deletePost = async (post) => {
+const handleDelete = async (post) => {
   if (!confirm('この投稿を削除しますか？')) return;
 
   try {
@@ -222,6 +171,10 @@ const deletePost = async (post) => {
   }
 };
 
+const handlePostClick = (post) => {
+  router.push(`/posts/${post.id}`);
+};
+
 watch([currentPage, currentTab], () => {
   fetchPosts();
 });
@@ -229,10 +182,15 @@ watch([currentPage, currentTab], () => {
 onMounted(() => {
   fetchPosts();
 });
+
+// メソッドを外部に公開
+defineExpose({
+  fetchPosts
+});
 </script>
 
 <style scoped>
-.post-list {
+.my-posts {
   max-width: 800px;
   margin: 0 auto;
   padding: 1rem;

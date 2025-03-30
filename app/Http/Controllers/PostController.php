@@ -23,17 +23,13 @@ class PostController extends Controller
     public function index(Request $request)
     {
         try {
-            \Log::info('投稿一覧の取得を開始します', [
+            \Log::info('公開投稿一覧の取得を開始します', [
                 'user' => Auth::user() ? Auth::user()->id : 'guest',
                 'params' => $request->all()
             ]);
 
-            $query = Post::with('user');
-
-            // ログインしているユーザーの場合、自分の投稿のみを表示
-            if (Auth::check()) {
-                $query->where('user_id', Auth::id());
-            }
+            $query = Post::with('user')
+                ->where('status', 'published');
 
             // タグでフィルタリング
             if ($request->has('tags') && !empty($request->tags)) {
@@ -47,20 +43,19 @@ class PostController extends Controller
 
             $posts = $query->latest()->paginate(10);
 
-            \Log::info('投稿一覧の取得が完了しました', [
+            \Log::info('公開投稿一覧の取得が完了しました', [
                 'count' => $posts->count(),
-                'total' => $posts->total(),
-                'user_id' => Auth::id()
+                'total' => $posts->total()
             ]);
 
             return response()->json($posts);
         } catch (\Exception $e) {
-            \Log::error('投稿一覧の取得に失敗しました', [
+            \Log::error('公開投稿一覧の取得に失敗しました', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
-                'message' => '投稿一覧の取得に失敗しました。',
+                'message' => '公開投稿一覧の取得に失敗しました。',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -117,8 +112,42 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        $this->authorize('view-post', $post);
-        return response()->json($post->load('images'));
+        try {
+            \Log::info('投稿の取得を開始します', [
+                'post_id' => $post->id,
+                'user' => Auth::user() ? Auth::user()->id : 'guest'
+            ]);
+
+            $this->authorize('view-post', $post);
+
+            $post->load(['user', 'images']);
+
+            \Log::info('投稿の取得が完了しました', [
+                'post_id' => $post->id
+            ]);
+
+            return response()->json($post);
+        } catch (\Illuminate\Auth\AuthorizationException $e) {
+            \Log::error('認可エラー', [
+                'error' => $e->getMessage(),
+                'post_id' => $post->id,
+                'user_id' => auth()->id()
+            ]);
+            return response()->json([
+                'message' => 'この投稿を閲覧する権限がありません。',
+                'error' => $e->getMessage()
+            ], 403);
+        } catch (\Exception $e) {
+            \Log::error('投稿の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'post_id' => $post->id
+            ]);
+            return response()->json([
+                'message' => '投稿の取得に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -311,6 +340,42 @@ class PostController extends Controller
             ]);
             return response()->json([
                 'message' => '公開中の投稿一覧の取得に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * 自分の投稿一覧を取得
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function myPosts()
+    {
+        try {
+            \Log::info('自分の投稿一覧の取得を開始します', [
+                'user' => Auth::user() ? Auth::user()->id : 'guest'
+            ]);
+
+            $posts = Post::with('user')
+                ->where('user_id', Auth::id())
+                ->latest()
+                ->paginate(10);
+
+            \Log::info('自分の投稿一覧の取得が完了しました', [
+                'count' => $posts->count(),
+                'total' => $posts->total(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json($posts);
+        } catch (\Exception $e) {
+            \Log::error('自分の投稿一覧の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => '自分の投稿一覧の取得に失敗しました。',
                 'error' => $e->getMessage()
             ], 500);
         }

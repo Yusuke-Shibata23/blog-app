@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/drafts', [PostController::class, 'drafts']);
     Route::get('/posts/scheduled', [PostController::class, 'scheduled']);
     Route::get('/posts/published', [PostController::class, 'published']);
+    Route::get('/posts/my', [PostController::class, 'myPosts']);
 
     // 投稿の作成・更新・削除
     Route::post('/posts', [PostController::class, 'store']);
