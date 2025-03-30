@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\PostImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PostController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * 投稿一覧を取得
      *
@@ -68,51 +74,39 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            \Log::info('Post creation request:', $request->all());
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'status' => 'required|in:draft,published',
+            'published_at' => 'nullable|date',
+            'scheduled_at' => 'nullable|date|after:now',
+            'images.*' => 'nullable|image|max:2048'
+        ]);
 
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
-                'tags' => 'nullable|array',
-                'tags.*' => 'string',
-            ]);
-
-            \Log::info('Validated data:', $validated);
-
-            // タグが空の場合は空配列を設定
-            if (empty($validated['tags'])) {
-                $validated['tags'] = [];
-            }
-
-            // タグの空文字を除去
-            $validated['tags'] = array_filter($validated['tags'], function($tag) {
-                return !empty(trim($tag));
-            });
-
-            \Log::info('Processed tags:', ['tags' => $validated['tags']]);
-
-            $post = Auth::user()->posts()->create($validated);
-
-            \Log::info('Post created successfully:', ['post_id' => $post->id]);
-
-            return response()->json($post->load('user'), 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation error:', ['errors' => $e->errors()]);
-            return response()->json([
-                'message' => 'バリデーションエラー',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Post creation failed:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'message' => '投稿の作成に失敗しました。',
-                'error' => $e->getMessage()
-            ], 500);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
+
+        $post = Post::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'status' => $request->status,
+            'published_at' => $request->published_at,
+            'scheduled_at' => $request->scheduled_at,
+            'user_id' => auth()->id()
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $image) {
+                $path = $image->store('post-images', 'public');
+                $post->images()->create([
+                    'image_path' => $path,
+                    'order' => $index
+                ]);
+            }
+        }
+
+        return response()->json($post->load('images'), 201);
     }
 
     /**
@@ -123,7 +117,8 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        return response()->json($post->load('user'));
+        $this->authorize('view-post', $post);
+        return response()->json($post->load('images'));
     }
 
     /**
@@ -135,18 +130,83 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        $this->authorize('update', $post);
+        try {
+            $this->authorize('update-post', $post);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string',
-        ]);
+            \Log::info('投稿の更新を開始します', [
+                'post_id' => $post->id,
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
 
-        $post->update($validated);
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'status' => 'required|in:draft,published',
+                'published_at' => 'nullable|date',
+                'scheduled_at' => 'nullable|date|after:now',
+                'images.*' => 'nullable|image|max:2048'
+            ]);
 
-        return response()->json($post);
+            if ($validator->fails()) {
+                \Log::warning('バリデーションエラー', [
+                    'errors' => $validator->errors()
+                ]);
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $post->update([
+                'title' => $request->title,
+                'content' => $request->content,
+                'status' => $request->status,
+                'published_at' => $request->published_at,
+                'scheduled_at' => $request->scheduled_at
+            ]);
+
+            if ($request->hasFile('images')) {
+                // 既存の画像を削除
+                foreach ($post->images as $image) {
+                    Storage::disk('public')->delete($image->image_path);
+                    $image->delete();
+                }
+
+                // 新しい画像を保存
+                foreach ($request->file('images') as $index => $image) {
+                    $path = $image->store('post-images', 'public');
+                    $post->images()->create([
+                        'image_path' => $path,
+                        'order' => $index
+                    ]);
+                }
+            }
+
+            \Log::info('投稿の更新が完了しました', [
+                'post_id' => $post->id
+            ]);
+
+            return response()->json($post->load('images'));
+        } catch (\Illuminate\Auth\AuthorizationException $e) {
+            \Log::error('認可エラー', [
+                'error' => $e->getMessage(),
+                'post_id' => $post->id,
+                'user_id' => auth()->id()
+            ]);
+            return response()->json([
+                'message' => 'この投稿を編集する権限がありません。',
+                'error' => $e->getMessage()
+            ], 403);
+        } catch (\Exception $e) {
+            \Log::error('投稿の更新に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'post_id' => $post->id,
+                'user_id' => auth()->id()
+            ]);
+            return response()->json([
+                'message' => '投稿の更新に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -157,10 +217,42 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        $this->authorize('delete', $post);
+        $this->authorize('delete-post', $post);
+
+        // 画像ファイルを削除
+        foreach ($post->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+        }
 
         $post->delete();
-
         return response()->json(null, 204);
+    }
+
+    /**
+     * Get draft posts.
+     */
+    public function drafts()
+    {
+        $posts = Post::with(['user', 'images'])
+            ->where('user_id', auth()->id())
+            ->draft()
+            ->latest()
+            ->paginate(10);
+
+        return response()->json($posts);
+    }
+
+    /**
+     * Get scheduled posts.
+     */
+    public function scheduled()
+    {
+        $posts = Post::with(['user', 'images'])
+            ->where('user_id', auth()->id())
+            ->scheduled()
+            ->latest()
+            ->paginate(10);
+
+        return response()->json($posts);
     }
 } 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Post extends Model
 {
@@ -13,13 +14,15 @@ class Post extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'title',
         'content',
-        'tags',
-        'user_id',
+        'status',
+        'published_at',
+        'scheduled_at',
+        'user_id'
     ];
 
     /**
@@ -28,17 +31,80 @@ class Post extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tags' => 'array',
+        'published_at' => 'datetime',
+        'scheduled_at' => 'datetime',
     ];
 
     /**
-     * 投稿に紐づくユーザーを取得
-     *
-     * @return BelongsTo
+     * Get the user that owns the post.
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the images for the post.
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(PostImage::class)->orderBy('order');
+    }
+
+    /**
+     * Scope a query to only include published posts.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('scheduled_at')
+                    ->orWhere('scheduled_at', '<=', now());
+            });
+    }
+
+    /**
+     * Scope a query to only include draft posts.
+     */
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
+    }
+
+    /**
+     * Scope a query to only include scheduled posts.
+     */
+    public function scopeScheduled($query)
+    {
+        return $query->where('status', 'published')
+            ->where('scheduled_at', '>', now());
+    }
+
+    /**
+     * Check if the post is published.
+     */
+    public function isPublished(): bool
+    {
+        return $this->status === 'published' && 
+            ($this->scheduled_at === null || $this->scheduled_at <= now());
+    }
+
+    /**
+     * Check if the post is draft.
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    /**
+     * Check if the post is scheduled.
+     */
+    public function isScheduled(): bool
+    {
+        return $this->status === 'published' && 
+            $this->scheduled_at !== null && 
+            $this->scheduled_at > now();
     }
 
     /**

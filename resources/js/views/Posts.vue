@@ -19,9 +19,8 @@
       <div class="bg-white rounded-lg w-full max-w-2xl">
         <PostForm
           :post="selectedPost"
-          @submit="handlePostSubmit"
           @success="handlePostSuccess"
-          @cancel="closePostForm"
+          @close="closePostForm"
         />
       </div>
     </div>
@@ -64,19 +63,19 @@ const handlePostSubmit = () => {
 }
 
 // 投稿の保存成功時の処理
-const handlePostSuccess = async () => {
+const handlePostSuccess = async (updatedPost) => {
   try {
-    if (postList.value) {
-      await postList.value.fetchPosts()
-      closePostForm() // フォームを閉じる
-    } else {
-      console.error('PostListコンポーネントが見つかりません')
-    }
+    // モーダルを閉じる
+    showPostForm.value = false;
+    selectedPost.value = null;
+    
+    // 成功メッセージを表示
+    alert('投稿を保存しました。');
   } catch (error) {
-    console.error('投稿一覧の更新に失敗しました:', error)
-    alert('投稿一覧の更新に失敗しました。')
+    console.error('エラーが発生しました:', error);
+    alert('エラーが発生しました。');
   }
-}
+};
 
 // 投稿の編集
 const handleEditPost = (post) => {

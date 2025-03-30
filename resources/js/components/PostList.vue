@@ -1,211 +1,242 @@
 <template>
-  <div class="post-list">
-    <!-- 検索フィルター -->
-    <div class="filters mb-4">
-      <div class="flex flex-wrap gap-4">
-        <input
-          v-model="keyword"
-          type="text"
-          placeholder="キーワードで検索"
-          class="form-input rounded-md"
-          @input="debounceSearch"
-        />
-        <input
-          v-model="tagInput"
-          type="text"
-          placeholder="タグを入力（カンマ区切り）"
-          class="form-input rounded-md"
-          @input="handleTagInput"
-        />
-        <div class="flex items-center">
-          <input
-            v-model="showMyPosts"
-            type="checkbox"
-            class="rounded text-blue-600"
-            @change="handleFilterChange"
-          />
-          <label class="ml-2 text-sm text-gray-700">自分の投稿のみ</label>
-        </div>
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-bold">投稿一覧</h2>
+      <div class="flex space-x-4">
+        <button
+          v-for="tab in tabs"
+          :key="tab.value"
+          @click="currentTab = tab.value"
+          :class="[
+            'px-4 py-2 rounded-md text-sm font-medium',
+            currentTab === tab.value
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          ]"
+        >
+          {{ tab.label }}
+        </button>
       </div>
     </div>
 
-    <!-- 投稿一覧 -->
-    <div class="grid gap-4">
-      <div v-for="post in posts" :key="post.id" class="post-card bg-white p-4 rounded-lg shadow">
-        <div class="flex justify-between items-start">
-          <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
-          <div class="flex gap-2" v-if="isAuthor(post)">
-            <button
-              @click="editPost(post)"
-              class="text-blue-600 hover:text-blue-800"
-            >
-              編集
-            </button>
-            <button
-              @click="deletePost(post)"
-              class="text-red-600 hover:text-red-800"
-            >
-              削除
-            </button>
+    <div v-if="loading" class="text-center py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+    </div>
+
+    <div v-else-if="posts.length === 0" class="text-center py-8 text-gray-500">
+      投稿がありません
+    </div>
+
+    <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-for="post in posts"
+        :key="post.id"
+        class="bg-white rounded-lg shadow overflow-hidden"
+      >
+        <div v-if="post.images && post.images.length > 0" class="relative h-48">
+          <img
+            :src="post.images[0].image_path"
+            :alt="post.title"
+            class="w-full h-full object-cover"
+          />
+          <div
+            v-if="post.images.length > 1"
+            class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm"
+          >
+            +{{ post.images.length - 1 }}
           </div>
         </div>
-        <p class="text-gray-600 mb-2">{{ post.content }}</p>
-        <div class="flex gap-2 mb-2">
-          <span
-            v-for="tag in post.tags"
-            :key="tag"
-            class="bg-gray-200 px-2 py-1 rounded-full text-sm"
-          >
-            {{ tag }}
-          </span>
-        </div>
-        <div class="text-sm text-gray-500">
-          投稿者: {{ post.user.name }}
+
+        <div class="p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold text-gray-900">{{ post.title }}</h3>
+            <span
+              :class="[
+                'px-2 py-1 text-xs font-medium rounded-full',
+                getStatusClass(post.status)
+              ]"
+            >
+              {{ getStatusLabel(post.status) }}
+            </span>
+          </div>
+
+          <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ post.content }}</p>
+
+          <div class="flex items-center justify-between text-sm text-gray-500">
+            <div class="flex items-center space-x-2">
+              <span>{{ post.user.name }}</span>
+              <span>•</span>
+              <span>{{ formatDate(post.created_at) }}</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button
+                v-if="post.status === 'draft'"
+                @click="publishPost(post)"
+                class="text-green-600 hover:text-green-700"
+              >
+                公開
+              </button>
+              <button
+                @click="$emit('edit', post)"
+                class="text-indigo-600 hover:text-indigo-700"
+              >
+                編集
+              </button>
+              <button
+                @click="deletePost(post)"
+                class="text-red-600 hover:text-red-700"
+              >
+                削除
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ページネーション -->
-    <div class="mt-4 flex justify-center gap-2">
+    <div v-if="posts.length > 0" class="flex justify-center mt-6">
       <button
-        v-for="page in Math.max(1, totalPages)"
-        :key="page"
-        @click="changePage(page)"
-        :class="[
-          'px-3 py-1 rounded',
-          currentPage === page
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 hover:bg-gray-300'
-        ]"
+        v-if="currentPage > 1"
+        @click="currentPage--"
+        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
       >
-        {{ page }}
+        前へ
+      </button>
+      <span class="px-4 py-2 text-sm text-gray-700">
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+      <button
+        v-if="currentPage < totalPages"
+        @click="currentPage++"
+        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+      >
+        次へ
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import axios from 'axios'
-import debounce from 'lodash/debounce'
+import { ref, computed, onMounted, watch } from 'vue';
+import axios from 'axios';
 
-const auth = useAuthStore()
-const posts = ref([])
-const keyword = ref('')
-const tagInput = ref('')
-const currentPage = ref(1)
-const totalPages = ref(1)
-const showMyPosts = ref(false)
+const props = defineProps({
+  userId: {
+    type: Number,
+    required: true
+  }
+});
 
-// 検索処理
+const emit = defineEmits(['edit']);
+
+const loading = ref(false);
+const posts = ref([]);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const currentTab = ref('all');
+
+const tabs = [
+  { label: 'すべて', value: 'all' },
+  { label: '下書き', value: 'draft' },
+  { label: '予約投稿', value: 'scheduled' }
+];
+
 const fetchPosts = async () => {
   try {
-    console.log('投稿一覧の取得を開始します', {
-      page: currentPage.value,
-      keyword: keyword.value,
-      tags: tagInput.value,
-      showMyPosts: showMyPosts.value,
-      userId: auth.user?.id
-    })
-
-    const params = {
-      page: currentPage.value,
-      keyword: keyword.value,
-      tags: tagInput.value ? tagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-      user_id: showMyPosts.value && auth.user ? auth.user.id : undefined
-    }
+    loading.value = true;
+    let url = '/api/posts';
     
-    const response = await axios.get('/api/posts', { 
-      params,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': auth.token ? `Bearer ${auth.token}` : undefined
+    switch (currentTab.value) {
+      case 'draft':
+        url = '/api/posts/drafts';
+        break;
+      case 'scheduled':
+        url = '/api/posts/scheduled';
+        break;
+    }
+
+    const response = await axios.get(url, {
+      params: {
+        page: currentPage.value
       }
-    })
+    });
 
-    console.log('投稿一覧の取得が完了しました', response.data)
-
-    posts.value = response.data.data || []
-    // ページ数の計算を安全に行う
-    const total = response.data.total || 0
-    const perPage = response.data.per_page || 10
-    totalPages.value = Math.max(1, Math.ceil(total / perPage))
+    posts.value = response.data.data;
+    currentPage.value = response.data.current_page;
+    totalPages.value = response.data.last_page;
   } catch (error) {
-    console.error('投稿の取得に失敗しました:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    })
-    posts.value = []
-    totalPages.value = 1
-    throw error
+    console.error('投稿の取得に失敗しました:', error);
+  } finally {
+    loading.value = false;
   }
-}
+};
 
-// 投稿の削除
-const deletePost = async (post) => {
-  if (!confirm('この投稿を削除してもよろしいですか？')) return
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'published':
+      return 'bg-green-100 text-green-800';
+    case 'draft':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'published':
+      return '公開中';
+    case 'draft':
+      return '下書き';
+    default:
+      return status;
+  }
+};
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const publishPost = async (post) => {
+  if (!confirm('この投稿を公開しますか？')) return;
 
   try {
-    await axios.delete(`/api/posts/${post.id}`, {
-      headers: {
-        'Authorization': `Bearer ${auth.token}`
-      }
-    })
-    await fetchPosts()
+    await axios.put(`/api/posts/${post.id}`, {
+      ...post,
+      status: 'published',
+      published_at: new Date().toISOString()
+    });
+    await fetchPosts();
   } catch (error) {
-    console.error('投稿の削除に失敗しました:', error)
+    console.error('投稿の公開に失敗しました:', error);
+    alert('投稿の公開に失敗しました。');
   }
-}
+};
 
-// 投稿の編集
-const editPost = (post) => {
-  // 親コンポーネントに編集イベントを通知
-  emit('edit', post)
-}
+const deletePost = async (post) => {
+  if (!confirm('この投稿を削除しますか？')) return;
 
-// 投稿者かどうかを判定
-const isAuthor = (post) => {
-  return auth.user && post.user_id === auth.user.id
-}
+  try {
+    await axios.delete(`/api/posts/${post.id}`);
+    await fetchPosts();
+  } catch (error) {
+    console.error('投稿の削除に失敗しました:', error);
+    alert('投稿の削除に失敗しました。');
+  }
+};
 
-// ページ変更
-const changePage = (page) => {
-  currentPage.value = page
-  fetchPosts()
-}
+watch([currentPage, currentTab], () => {
+  fetchPosts();
+});
 
-// 検索のデバウンス処理
-const debounceSearch = debounce(() => {
-  currentPage.value = 1
-  fetchPosts()
-}, 300)
-
-// タグ入力処理
-const handleTagInput = () => {
-  currentPage.value = 1
-  fetchPosts()
-}
-
-// フィルター変更時の処理
-const handleFilterChange = () => {
-  currentPage.value = 1 // フィルター変更時は1ページ目に戻る
-  fetchPosts()
-}
-
-// コンポーネントの初期化時に投稿を取得
 onMounted(() => {
-  fetchPosts()
-})
-
-// イベントの定義
-const emit = defineEmits(['edit'])
-
-// メソッドを外部に公開
-defineExpose({
-  fetchPosts
-})
+  fetchPosts();
+});
 </script>
 
 <style scoped>
