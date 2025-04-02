@@ -115,15 +115,19 @@ class PostController extends Controller
         try {
             \Log::info('投稿の取得を開始します', [
                 'post_id' => $post->id,
-                'user' => Auth::user() ? Auth::user()->id : 'guest'
+                'user' => Auth::user() ? Auth::user()->id : 'guest',
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
             ]);
 
-            $this->authorize('view-post', $post);
+            $this->authorize('viewPost', $post);
 
             $post->load(['user', 'images']);
 
             \Log::info('投稿の取得が完了しました', [
-                'post_id' => $post->id
+                'post_id' => $post->id,
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
             ]);
 
             return response()->json($post);
@@ -131,7 +135,9 @@ class PostController extends Controller
             \Log::error('認可エラー', [
                 'error' => $e->getMessage(),
                 'post_id' => $post->id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
             ]);
             return response()->json([
                 'message' => 'この投稿を閲覧する権限がありません。',
@@ -141,7 +147,10 @@ class PostController extends Controller
             \Log::error('投稿の取得に失敗しました', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'post_id' => $post->id
+                'post_id' => $post->id,
+                'user_id' => auth()->id(),
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
             ]);
             return response()->json([
                 'message' => '投稿の取得に失敗しました。',
@@ -160,7 +169,7 @@ class PostController extends Controller
     public function update(Request $request, Post $post)
     {
         try {
-            $this->authorize('update-post', $post);
+            $this->authorize('update', $post);
 
             \Log::info('投稿の更新を開始します', [
                 'post_id' => $post->id,
