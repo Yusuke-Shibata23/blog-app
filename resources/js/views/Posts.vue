@@ -2,13 +2,13 @@
   <div class="posts-view">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">ブログ投稿</h1>
-      <button
+      <router-link
         v-if="auth.isAuthenticated"
-        @click="showPostForm = true"
+        to="/posts/create"
         class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
       >
         新規投稿
-      </button>
+      </router-link>
     </div>
 
     <!-- 投稿フォームモーダル -->
