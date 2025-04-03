@@ -45,16 +45,37 @@
         -->
 
         <div class="mt-8 flex justify-between items-center">
-          <div class="flex space-x-4">
+          <div class="flex items-center space-x-4">
             <button
-              v-if="canEdit"
+              @click="toggleLike"
+              class="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
+              :class="{ 'text-red-500': isLiked }"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              <span>{{ likesCount }}</span>
+            </button>
+          </div>
+
+          <div v-if="canEdit" class="flex space-x-4">
+            <button
               @click="editPost"
               class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
             >
               編集
             </button>
             <button
-              v-if="canDelete"
               @click="deletePost"
               class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
             >
@@ -112,6 +133,8 @@ const post = ref(null);
 const loading = ref(true);
 const showLightbox = ref(false);
 const currentImageIndex = ref(0);
+const isLiked = ref(false);
+const likesCount = ref(0);
 
 const currentImageUrl = computed(() => {
   return post.value?.images?.[currentImageIndex.value]?.url || '';
@@ -179,8 +202,31 @@ const deletePost = async () => {
   }
 };
 
-onMounted(() => {
-  fetchPost();
+const toggleLike = async () => {
+  try {
+    const response = await axios.post(`/api/posts/${post.value.id}/toggle-like`);
+    isLiked.value = response.data.liked;
+    likesCount.value = response.data.likes_count;
+  } catch (error) {
+    console.error('いいねの処理に失敗しました:', error);
+  }
+};
+
+const checkLikeStatus = async () => {
+  try {
+    const response = await axios.get(`/api/posts/${post.value.id}/like-status`);
+    isLiked.value = response.data.is_liked;
+    likesCount.value = response.data.likes_count;
+  } catch (error) {
+    console.error('いいね状態の取得に失敗しました:', error);
+  }
+};
+
+onMounted(async () => {
+  await fetchPost();
+  if (post.value) {
+    await checkLikeStatus();
+  }
 });
 </script>
 

@@ -518,4 +518,59 @@ class PostController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * いいねのトグル
+     */
+    public function toggleLike(Post $post)
+    {
+        $user = auth()->user();
+        
+        if ($post->isLikedBy($user)) {
+            $post->likes()->where('user_id', $user->id)->delete();
+            return response()->json([
+                'liked' => false,
+                'likes_count' => $post->likes_count
+            ]);
+        }
+        
+        $post->likes()->create(['user_id' => $user->id]);
+        return response()->json([
+            'liked' => true,
+            'likes_count' => $post->likes_count
+        ]);
+    }
+
+    /**
+     * いいね状態の取得
+     */
+    public function getLikeStatus(Post $post)
+    {
+        $user = auth()->user();
+        return response()->json([
+            'is_liked' => $post->isLikedBy($user),
+            'likes_count' => $post->likes_count
+        ]);
+    }
+
+    /**
+     * いいねした記事一覧を取得
+     */
+    public function likedPosts()
+    {
+        $user = auth()->user();
+        $posts = Post::whereHas('likes', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->where('status', 'published')
+        ->where(function($q) {
+            $q->whereNull('scheduled_at')
+              ->orWhere('scheduled_at', '<=', now());
+        })
+        ->with(['user', 'likes'])
+        ->orderBy('created_at', 'desc')
+        ->paginate(9);
+
+        return response()->json($posts);
+    }
 } 

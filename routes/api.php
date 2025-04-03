@@ -37,6 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 画像アップロード
     Route::post('/upload-image', [ImageController::class, 'upload']);
+
+    // いいね機能のルート
+    Route::post('/posts/{post}/toggle-like', [PostController::class, 'toggleLike']);
+    Route::get('/posts/{post}/like-status', [PostController::class, 'getLikeStatus']);
+    Route::get('/posts/liked', [PostController::class, 'likedPosts']);
 });
 
 // 公開投稿一覧と詳細（認証不要）

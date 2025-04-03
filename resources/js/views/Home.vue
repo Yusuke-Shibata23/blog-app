@@ -1,7 +1,25 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold mb-4">記事一覧</h1>
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-3xl font-bold">記事一覧</h1>
+        <div class="flex space-x-4">
+          <button
+            @click="activeTab = 'all'"
+            class="px-4 py-2 rounded-md"
+            :class="activeTab === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+          >
+            すべての記事
+          </button>
+          <button
+            @click="activeTab = 'liked'"
+            class="px-4 py-2 rounded-md"
+            :class="activeTab === 'liked' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+          >
+            いいねした記事
+          </button>
+        </div>
+      </div>
       <div class="flex flex-col md:flex-row gap-4 mb-6">
         <div class="flex-1">
           <input
@@ -20,7 +38,9 @@
     </div>
 
     <div v-else-if="posts.length === 0" class="text-center py-12">
-      <p class="text-gray-500">記事が見つかりませんでした。</p>
+      <p class="text-gray-500">
+        {{ activeTab === 'liked' ? 'いいねした記事はありません。' : '記事が見つかりませんでした。' }}
+      </p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -56,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -64,6 +84,7 @@ const router = useRouter()
 const posts = ref([])
 const loading = ref(true)
 const searchQuery = ref('')
+const activeTab = ref('all')
 let searchTimeout = null
 
 const formatDate = (date) => {
@@ -85,7 +106,8 @@ const handlePostClick = (postId) => {
 const fetchPosts = async (query = '') => {
   try {
     loading.value = true
-    const response = await axios.get('/api/posts', {
+    const endpoint = activeTab.value === 'liked' ? '/api/posts/liked' : '/api/posts'
+    const response = await axios.get(endpoint, {
       params: {
         search: query
       }
@@ -104,6 +126,10 @@ const handleSearch = () => {
     fetchPosts(searchQuery.value)
   }, 300)
 }
+
+watch(activeTab, () => {
+  fetchPosts(searchQuery.value)
+})
 
 onMounted(() => {
   fetchPosts()
