@@ -28,21 +28,27 @@ class PostController extends Controller
                 'params' => $request->all()
             ]);
 
-            $query = Post::with('user')
-                ->where('status', 'published')
-                ->where(function ($q) {
-                    $q->whereNull('scheduled_at')
-                        ->orWhere('scheduled_at', '<=', now());
+            $query = Post::query();
+
+            // 検索クエリがある場合
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('content', 'like', "%{$search}%");
                 });
+            }
+
+            // 公開済みの記事のみを取得
+            $query->where('status', 'published')
+                  ->where(function($q) {
+                      $q->whereNull('scheduled_at')
+                        ->orWhere('scheduled_at', '<=', now());
+                  });
 
             // タグでフィルタリング
             if ($request->has('tags') && !empty($request->tags)) {
                 $query->withTags($request->tags);
-            }
-
-            // キーワード検索
-            if ($request->has('keyword') && !empty($request->keyword)) {
-                $query->search($request->keyword);
             }
 
             $posts = $query->latest()->paginate(10);

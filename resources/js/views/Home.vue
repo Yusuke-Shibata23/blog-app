@@ -1,15 +1,29 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">ブログ一覧</h1>
-      <router-link
-        to="/posts"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-      >
-        投稿一覧を見る
-      </router-link>
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-4">記事一覧</h1>
+      <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="flex-1">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="記事を検索..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            @input="handleSearch"
+          />
+        </div>
+      </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+    </div>
+
+    <div v-else-if="posts.length === 0" class="text-center py-12">
+      <p class="text-gray-500">記事が見つかりませんでした。</p>
+    </div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
         v-for="post in posts"
         :key="post.id"
@@ -49,6 +63,8 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const posts = ref([])
 const loading = ref(true)
+const searchQuery = ref('')
+let searchTimeout = null
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ja-JP', {
@@ -66,16 +82,27 @@ const handlePostClick = (postId) => {
   router.push(`/posts/public/${postId}`)
 }
 
-const fetchPosts = async () => {
+const fetchPosts = async (query = '') => {
   try {
     loading.value = true
-    const response = await axios.get('/api/posts')
+    const response = await axios.get('/api/posts', {
+      params: {
+        search: query
+      }
+    })
     posts.value = response.data.data || []
   } catch (error) {
     console.error('投稿の取得に失敗しました:', error)
   } finally {
     loading.value = false
   }
+}
+
+const handleSearch = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchPosts(searchQuery.value)
+  }, 300)
 }
 
 onMounted(() => {
