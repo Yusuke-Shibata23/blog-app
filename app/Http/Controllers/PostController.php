@@ -29,7 +29,11 @@ class PostController extends Controller
             ]);
 
             $query = Post::with('user')
-                ->where('status', 'published');
+                ->where('status', 'published')
+                ->where(function ($q) {
+                    $q->whereNull('scheduled_at')
+                        ->orWhere('scheduled_at', '<=', now());
+                });
 
             // タグでフィルタリング
             if ($request->has('tags') && !empty($request->tags)) {
@@ -126,7 +130,11 @@ class PostController extends Controller
                 'post_user_id' => $post->user_id
             ]);
 
-            $this->authorize('viewPost', $post);
+            // 公開記事の場合は認可チェックをスキップ
+            if ($post->status !== 'published' || 
+                ($post->scheduled_at !== null && $post->scheduled_at > now())) {
+                $this->authorize('viewPost', $post);
+            }
 
             $post->load(['user', 'images']);
 
