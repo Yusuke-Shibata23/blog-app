@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('status')->default('draft')->after('content');
             $table->timestamp('published_at')->nullable()->after('status');
             $table->timestamp('scheduled_at')->nullable()->after('published_at');
+            $table->string('thumbnail_path')->nullable();
         });
     }
 
@@ -24,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('posts', function (Blueprint $table) {
-            $table->dropColumn(['status', 'published_at', 'scheduled_at']);
+            $table->dropColumn(['status', 'published_at', 'scheduled_at', 'thumbnail_path']);
         });
     }
 }; 

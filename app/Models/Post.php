@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
 {
@@ -22,6 +23,7 @@ class Post extends Model
         'status',
         'published_at',
         'scheduled_at',
+        'thumbnail_path',
         'user_id'
     ];
 
@@ -33,6 +35,10 @@ class Post extends Model
     protected $casts = [
         'published_at' => 'datetime',
         'scheduled_at' => 'datetime',
+    ];
+
+    protected $appends = [
+        'thumbnail_url'
     ];
 
     /**
@@ -146,5 +152,10 @@ class Post extends Model
             $query->where('title', 'like', "%{$keyword}%")
                   ->orWhere('content', 'like', "%{$keyword}%");
         });
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return $this->thumbnail_path ? Storage::url($this->thumbnail_path) : null;
     }
 }

@@ -75,7 +75,8 @@ class PostController extends Controller
             'status' => 'required|in:draft,published',
             'published_at' => 'nullable|date',
             'scheduled_at' => 'nullable|date|after:now',
-            'images.*' => 'nullable|image|max:2048'
+            'images.*' => 'nullable|image|max:2048',
+            'thumbnail' => 'nullable|image|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -91,9 +92,14 @@ class PostController extends Controller
             'user_id' => auth()->id()
         ]);
 
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+            $post->update(['thumbnail_path' => $thumbnailPath]);
+        }
+
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('post-images', 'public');
+                $path = $image->store('images', 'public');
                 $post->images()->create([
                     'image_path' => $path,
                     'order' => $index
@@ -179,11 +185,22 @@ class PostController extends Controller
                 'request_headers' => $request->headers->all()
             ]);
 
+            // デバッグ用：リクエストの詳細をログに記録
+            \Log::debug('リクエストの詳細', [
+                'hasFile_thumbnail' => $request->hasFile('thumbnail'),
+                'thumbnail' => $request->file('thumbnail'),
+                'allFiles' => $request->allFiles(),
+                'all' => $request->all()
+            ]);
+
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'status' => 'required|in:draft,published',
-                'images.*' => 'nullable|file|mimes:jpeg,png,gif|max:10240'
+                'images.*' => 'nullable|file|mimes:jpeg,png,gif|max:10240',
+                'thumbnail' => 'nullable|file|mimes:jpeg,png,gif|max:2048',
+                'thumbnail_path' => 'nullable|string',
+                'delete_thumbnail' => 'nullable|boolean'
             ], [
                 'title.required' => 'タイトルは必須です。',
                 'title.max' => 'タイトルは255文字以内で入力してください。',
@@ -192,7 +209,11 @@ class PostController extends Controller
                 'status.in' => '無効なステータスです。',
                 'images.*.file' => '画像ファイルをアップロードしてください。',
                 'images.*.mimes' => '画像はJPEG、PNG、GIF形式のみアップロード可能です。',
-                'images.*.max' => '画像サイズは10MB以下にしてください。'
+                'images.*.max' => '画像サイズは10MB以下にしてください。',
+                'thumbnail.file' => 'サムネイル画像をアップロードしてください。',
+                'thumbnail.mimes' => 'サムネイル画像はJPEG、PNG、GIF形式のみアップロード可能です。',
+                'thumbnail.max' => 'サムネイル画像サイズは2MB以下にしてください。',
+                'delete_thumbnail.boolean' => '無効な削除オプションです。'
             ]);
 
             if ($validator->fails()) {
@@ -221,9 +242,35 @@ class PostController extends Controller
                 }
             }
 
+            // サムネイル画像の処理
+            \Log::info('サムネイル画像の処理を開始します', [
+                'hasFile' => $request->hasFile('thumbnail'),
+                'files' => $request->allFiles(),
+                'request_data' => $request->all()
+            ]);
+
+            if ($request->hasFile('thumbnail')) {
+                // 古いサムネイルを削除
+                if ($post->thumbnail_path) {
+                    Storage::disk('public')->delete($post->thumbnail_path);
+                }
+                // 新しいサムネイルを保存
+                $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+                \Log::info('サムネイル画像を保存しました', [
+                    'thumbnail_path' => $thumbnailPath
+                ]);
+                $post->update(['thumbnail_path' => $thumbnailPath]);
+            } else if ($request->has('delete_thumbnail') && $request->delete_thumbnail === '1') {
+                // サムネイル画像の削除
+                if ($post->thumbnail_path) {
+                    Storage::disk('public')->delete($post->thumbnail_path);
+                    $post->update(['thumbnail_path' => null]);
+                }
+            }
+
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('post-images', 'public');
+                    $path = $image->store('images', 'public');
                     $post->images()->create([
                         'image_path' => $path,
                         'order' => $index
@@ -231,6 +278,7 @@ class PostController extends Controller
                 }
             }
 
+            // 投稿の更新
             $post->update([
                 'title' => $request->title,
                 'content' => $content,
