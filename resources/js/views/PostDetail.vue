@@ -146,7 +146,11 @@ const closeLightbox = () => {
 const fetchPost = async () => {
   try {
     loading.value = true;
-    const response = await axios.get(`/api/posts/${route.params.id}`);
+    const isPublicRoute = route.path.includes('/posts/public/');
+    const apiUrl = isPublicRoute 
+      ? `/api/posts/public/${route.params.id}`
+      : `/api/posts/${route.params.id}`;
+    const response = await axios.get(apiUrl);
     post.value = response.data;
   } catch (error) {
     console.error('Error fetching post:', error);

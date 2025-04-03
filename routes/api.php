@@ -29,8 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/published', [PostController::class, 'published']);
     Route::get('/posts/my', [PostController::class, 'myPosts']);
 
-    // 投稿の作成・更新・削除
+    // 投稿の作成・更新・削除・詳細表示
     Route::post('/posts', [PostController::class, 'store']);
+    Route::get('/posts/{post}', [PostController::class, 'show']);
     Route::put('/posts/{post}', [PostController::class, 'update']);
     Route::delete('/posts/{post}', [PostController::class, 'destroy']);
 
@@ -40,4 +41,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // 公開投稿一覧と詳細（認証不要）
 Route::get('/posts', [PostController::class, 'index']);
-Route::get('/posts/{post}', [PostController::class, 'show']); 
+Route::get('/posts/public/{post}', [PostController::class, 'showPublic']); 

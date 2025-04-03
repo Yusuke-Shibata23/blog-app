@@ -20,8 +20,7 @@ class PostPolicy
     public function viewPost(?User $user, Post $post)
     {
         // 公開済みの投稿は誰でも閲覧可能
-        if ($post->status === 'published' && 
-            ($post->scheduled_at === null || $post->scheduled_at <= now())) {
+        if ($post->status === 'published') {
             return true;
         }
 
@@ -30,7 +29,7 @@ class PostPolicy
             return false;
         }
 
-        // 投稿者は自分の投稿を閲覧可能
+        // 投稿者は自分の投稿（下書き含む）を閲覧可能
         return $user->id === $post->user_id;
     }
 

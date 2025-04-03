@@ -33,6 +33,11 @@ const routes = [
     path: '/posts/:id',
     name: 'post-detail',
     component: () => import('../views/PostDetail.vue')
+  },
+  {
+    path: '/posts/public/:id',
+    name: 'post-detail-public',
+    component: () => import('../views/PostDetail.vue')
   }
 ];
 

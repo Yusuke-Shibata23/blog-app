@@ -131,8 +131,7 @@ class PostController extends Controller
             ]);
 
             // 公開記事の場合は認可チェックをスキップ
-            if ($post->status !== 'published' || 
-                ($post->scheduled_at !== null && $post->scheduled_at > now())) {
+            if ($post->status !== 'published') {
                 $this->authorize('viewPost', $post);
             }
 
@@ -460,6 +459,55 @@ class PostController extends Controller
             ]);
             return response()->json([
                 'message' => '自分の投稿一覧の取得に失敗しました。',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * 公開記事の詳細を取得
+     *
+     * @param Post $post
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showPublic(Post $post)
+    {
+        try {
+            \Log::info('公開記事の取得を開始します', [
+                'post_id' => $post->id,
+                'user' => Auth::user() ? Auth::user()->id : 'guest',
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
+            ]);
+
+            // 公開記事でない場合は404
+            if ($post->status !== 'published' || 
+                ($post->scheduled_at !== null && $post->scheduled_at > now())) {
+                return response()->json([
+                    'message' => '記事が見つかりません。'
+                ], 404);
+            }
+
+            $post->load(['user', 'images']);
+
+            \Log::info('公開記事の取得が完了しました', [
+                'post_id' => $post->id,
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
+            ]);
+
+            return response()->json($post);
+        } catch (\Exception $e) {
+            \Log::error('公開記事の取得に失敗しました', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'post_id' => $post->id,
+                'user_id' => auth()->id(),
+                'post_status' => $post->status,
+                'post_user_id' => $post->user_id
+            ]);
+            return response()->json([
+                'message' => '記事の取得に失敗しました。',
                 'error' => $e->getMessage()
             ], 500);
         }

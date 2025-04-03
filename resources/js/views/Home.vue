@@ -14,7 +14,7 @@
         v-for="post in posts"
         :key="post.id"
         class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-        @click="router.push(`/posts/${post.id}`)"
+        @click="handlePostClick(post.id)"
       >
         <!-- サムネイル部分 -->
         <div class="aspect-w-16 aspect-h-9">
@@ -60,6 +60,10 @@ const formatDate = (date) => {
 
 const handleImageError = (event) => {
   event.target.src = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'
+}
+
+const handlePostClick = (postId) => {
+  router.push(`/posts/public/${postId}`)
 }
 
 const fetchPosts = async () => {
