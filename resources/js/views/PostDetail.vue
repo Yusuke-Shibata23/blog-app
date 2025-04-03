@@ -22,23 +22,27 @@
           <span>{{ post.status === 'published' ? '公開' : '下書き' }}</span>
         </div>
 
-        <div class="prose max-w-none">
-          <div v-html="renderedContent"></div>
-        </div>
+        <div class="prose max-w-none" v-html="renderedContent"></div>
 
+        <!-- 画像ギャラリーを一時的にコメントアウト
         <div v-if="post.images && post.images.length > 0" class="mt-8">
-          <h2 class="text-xl font-semibold mb-4">画像ギャラリー</h2>
+          <h2 class="text-xl font-bold mb-4">画像ギャラリー</h2>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div v-for="(image, index) in post.images" :key="index" class="relative">
+            <div
+              v-for="(image, index) in post.images"
+              :key="image.id"
+              class="relative aspect-w-16 aspect-h-9 cursor-pointer"
+              @click="openLightbox(index)"
+            >
               <img
                 :src="image.url"
-                :alt="`Image ${index + 1}`"
-                class="w-full h-48 object-cover rounded-lg cursor-pointer"
-                @click="openLightbox(index)"
+                :alt="`画像 ${index + 1}`"
+                class="object-cover rounded-lg shadow-md"
               />
             </div>
           </div>
         </div>
+        -->
 
         <div class="mt-8 flex justify-between items-center">
           <div class="flex space-x-4">
