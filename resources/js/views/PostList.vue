@@ -39,4 +39,65 @@
       </div>
     </div>
   </div>
-</template> 
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+
+const posts = ref([]);
+const loading = ref(true);
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const fetchPosts = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get('/api/posts');
+    posts.value = response.data;
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchPosts();
+});
+</script>
+
+<style scoped>
+.aspect-w-16 {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 アスペクト比 */
+}
+
+.aspect-w-16 > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style> 

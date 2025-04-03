@@ -37,14 +37,27 @@
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
-            <p class="text-gray-600 mb-4 line-clamp-3">{{ post.content }}</p>
-            <div class="flex items-center text-sm text-gray-500">
-              <span>投稿者: {{ post.user?.name || '不明' }}</span>
-              <span class="mx-2">|</span>
-              <span>投稿日: {{ formatDate(post.created_at) }}</span>
-              <span v-if="post.published_at" class="mx-2">|</span>
-              <span v-if="post.published_at">公開日: {{ formatDate(post.published_at) }}</span>
+            <div class="flex items-start space-x-4">
+              <!-- サムネイル部分 -->
+              <div class="w-32 h-24 flex-shrink-0">
+                <img
+                  :src="post.thumbnail_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'"
+                  :alt="post.title"
+                  class="w-full h-full object-cover rounded-md"
+                  @error="handleImageError"
+                />
+              </div>
+              <div class="flex-1">
+                <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
+                <p class="text-gray-600 mb-4 line-clamp-3">{{ post.content }}</p>
+                <div class="flex items-center text-sm text-gray-500">
+                  <span>投稿者: {{ post.user?.name || '不明' }}</span>
+                  <span class="mx-2">|</span>
+                  <span>投稿日: {{ formatDate(post.created_at) }}</span>
+                  <span v-if="post.published_at" class="mx-2">|</span>
+                  <span v-if="post.published_at">公開日: {{ formatDate(post.published_at) }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <!-- ログインユーザーのみに表示 -->
@@ -173,6 +186,10 @@ const handleDelete = async (post) => {
 
 const handlePostClick = (post) => {
   router.push(`/posts/${post.id}`);
+};
+
+const handleImageError = (event) => {
+  event.target.src = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085';
 };
 
 watch([currentPage, currentTab], () => {
