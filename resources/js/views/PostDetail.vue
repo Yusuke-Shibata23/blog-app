@@ -1,167 +1,130 @@
 <template>
-  <div class="post-detail">
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-      <p class="mt-4 text-gray-600">読み込み中...</p>
+  <div class="container mx-auto px-4 py-8">
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
     </div>
 
-    <div v-else-if="error" class="text-center py-8">
-      <p class="text-red-600">{{ error }}</p>
-      <button
-        @click="fetchPost"
-        class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        再試行
-      </button>
-    </div>
+    <div v-else-if="post" class="max-w-4xl mx-auto">
+      <!-- サムネイル画像 -->
+      <div class="mb-8">
+        <img
+          :src="post.thumbnail_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'"
+          :alt="post.title"
+          class="w-full h-96 object-cover rounded-lg shadow-lg"
+        />
+      </div>
 
-    <div v-else-if="post" class="max-w-4xl mx-auto px-4 py-8">
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <!-- ヘッダー部分 -->
-        <div class="p-6 border-b">
-          <div class="flex justify-between items-start">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ post.title }}</h1>
-              <div class="flex items-center text-sm text-gray-500">
-                <span>投稿者: {{ post.user?.name || '不明' }}</span>
-                <span class="mx-2">|</span>
-                <span>投稿日: {{ formatDate(post.created_at) }}</span>
-                <span v-if="post.published_at" class="mx-2">|</span>
-                <span v-if="post.published_at">公開日: {{ formatDate(post.published_at) }}</span>
-              </div>
-            </div>
-            <!-- ログインユーザーのみに表示 -->
-            <div v-if="auth.isAuthenticated && post.user_id === auth.user.id" class="flex space-x-2">
-              <button
-                @click="handleEdit"
-                class="text-blue-600 hover:text-blue-800"
-              >
-                編集
-              </button>
-              <button
-                @click="handleDelete"
-                class="text-red-600 hover:text-red-800"
-              >
-                削除
-              </button>
-            </div>
-          </div>
+      <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-4">{{ post.title }}</h1>
+        <div class="flex items-center text-gray-500 mb-6">
+          <span>{{ formatDate(post.created_at) }}</span>
+          <span class="mx-2">•</span>
+          <span>{{ post.status === 'published' ? '公開' : '下書き' }}</span>
         </div>
 
-        <!-- 画像ギャラリー -->
-        <div v-if="post.images && post.images.length > 0" class="p-6 border-b">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-              v-for="image in post.images"
-              :key="image.id"
-              class="relative aspect-square group"
-            >
+        <div class="prose max-w-none">
+          <div v-html="renderedContent"></div>
+        </div>
+
+        <div v-if="post.images && post.images.length > 0" class="mt-8">
+          <h2 class="text-xl font-semibold mb-4">画像ギャラリー</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div v-for="(image, index) in post.images" :key="index" class="relative">
               <img
                 :src="image.url"
-                :alt="image.alt_text || '投稿画像'"
-                class="w-full h-full object-cover rounded-lg"
+                :alt="`Image ${index + 1}`"
+                class="w-full h-48 object-cover rounded-lg cursor-pointer"
+                @click="openLightbox(index)"
               />
-              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
-                <button
-                  @click="openLightbox(image)"
-                  class="text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  拡大表示
-                </button>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- 本文 -->
-        <div class="p-6">
-          <div class="prose max-w-none" v-html="renderedContent"></div>
+        <div class="mt-8 flex justify-between items-center">
+          <div class="flex space-x-4">
+            <button
+              v-if="canEdit"
+              @click="editPost"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              編集
+            </button>
+            <button
+              v-if="canDelete"
+              @click="deletePost"
+              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            >
+              削除
+            </button>
+          </div>
+          <router-link
+            to="/posts"
+            class="text-gray-600 hover:text-gray-800"
+          >
+            一覧に戻る
+          </router-link>
         </div>
       </div>
     </div>
 
-    <!-- 画像ライトボックス -->
+    <div v-else class="text-center">
+      <p class="text-gray-600">記事が見つかりませんでした。</p>
+    </div>
+
+    <!-- ライトボックス -->
     <div
-      v-if="selectedImage"
+      v-if="showLightbox"
       class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
       @click="closeLightbox"
     >
-      <div class="relative max-w-4xl max-h-[90vh] mx-4">
-        <img
-          :src="selectedImage.url"
-          :alt="selectedImage.alt_text || '投稿画像'"
-          class="max-w-full max-h-[90vh] object-contain"
-        />
+      <div class="relative max-w-4xl w-full mx-4">
         <button
-          @click="closeLightbox"
-          class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+          @click.stop="closeLightbox"
+          class="absolute top-4 right-4 text-white hover:text-gray-300"
         >
-          ×
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
+        <img
+          :src="currentImageUrl"
+          class="max-h-[80vh] mx-auto"
+        />
       </div>
     </div>
-
-    <!-- 投稿フォームモーダル -->
-    <PostForm
-      v-if="showPostForm"
-      :post="selectedPost"
-      @close="closePostForm"
-      @success="handlePostSuccess"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import { useAuth } from '../stores/auth';
-import PostForm from '../components/PostForm.vue';
 import { marked } from 'marked';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
-
-// markedの設定
-marked.setOptions({
-  highlight: function(code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(code, { language: lang }).value;
-    }
-    return hljs.highlightAuto(code).value;
-  },
-  breaks: true
-});
+import DOMPurify from 'dompurify';
 
 const route = useRoute();
 const router = useRouter();
-const auth = useAuth();
-
-const loading = ref(true);
-const error = ref(null);
 const post = ref(null);
-const showPostForm = ref(false);
-const selectedPost = ref(null);
-const selectedImage = ref(null);
+const loading = ref(true);
+const showLightbox = ref(false);
+const currentImageIndex = ref(0);
 
-// Markdownコンテンツのレンダリング用のcomputed
-const renderedContent = computed(() => {
-  if (!post.value?.content) return '';
-  return marked(post.value.content);
+const currentImageUrl = computed(() => {
+  return post.value?.images?.[currentImageIndex.value]?.url || '';
 });
 
-const fetchPost = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-    const response = await axios.get(`/api/posts/${route.params.id}`);
-    post.value = response.data;
-  } catch (error) {
-    console.error('投稿の取得に失敗しました:', error);
-    error.value = '投稿の取得に失敗しました。';
-  } finally {
-    loading.value = false;
-  }
-};
+const canEdit = computed(() => {
+  return post.value?.user_id === parseInt(localStorage.getItem('user_id'));
+});
+
+const canDelete = computed(() => {
+  return post.value?.user_id === parseInt(localStorage.getItem('user_id'));
+});
+
+const renderedContent = computed(() => {
+  if (!post.value?.content) return '';
+  return DOMPurify.sanitize(marked(post.value.content));
+});
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ja-JP', {
@@ -171,39 +134,41 @@ const formatDate = (date) => {
   });
 };
 
-const handleEdit = () => {
-  selectedPost.value = { ...post.value };
-  showPostForm.value = true;
+const openLightbox = (index) => {
+  currentImageIndex.value = index;
+  showLightbox.value = true;
 };
 
-const handleDelete = async () => {
-  if (!confirm('この投稿を削除しますか？')) return;
+const closeLightbox = () => {
+  showLightbox.value = false;
+};
+
+const fetchPost = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get(`/api/posts/${route.params.id}`);
+    post.value = response.data;
+  } catch (error) {
+    console.error('Error fetching post:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const editPost = () => {
+  router.push(`/posts/${post.value.id}/edit`);
+};
+
+const deletePost = async () => {
+  if (!confirm('この記事を削除してもよろしいですか？')) return;
 
   try {
     await axios.delete(`/api/posts/${post.value.id}`);
     router.push('/posts');
   } catch (error) {
-    console.error('投稿の削除に失敗しました:', error);
-    alert('投稿の削除に失敗しました。');
+    console.error('Error deleting post:', error);
+    alert('記事の削除に失敗しました。');
   }
-};
-
-const closePostForm = () => {
-  showPostForm.value = false;
-  selectedPost.value = null;
-};
-
-const handlePostSuccess = async () => {
-  closePostForm();
-  await fetchPost();
-};
-
-const openLightbox = (image) => {
-  selectedImage.value = image;
-};
-
-const closeLightbox = () => {
-  selectedImage.value = null;
 };
 
 onMounted(() => {
@@ -212,8 +177,59 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.post-detail {
-  min-height: calc(100vh - 4rem);
+.prose {
+  color: #1f2937;
+}
+
+.prose :deep(h1) {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.prose :deep(h2) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.prose :deep(p) {
+  margin-bottom: 1rem;
+}
+
+.prose :deep(img) {
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+}
+
+.prose :deep(blockquote) {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+.prose :deep(code) {
   background-color: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.prose :deep(pre) {
+  background-color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.prose :deep(ul) {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose :deep(ol) {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
 }
 </style> 
