@@ -48,32 +48,44 @@
                 />
               </div>
               <div class="flex-1">
-                <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
-                <p class="text-gray-600 mb-4 line-clamp-3">{{ post.content }}</p>
-                <div class="flex items-center text-sm text-gray-500">
-                  <span>投稿者: {{ post.user?.name || '不明' }}</span>
-                  <span class="mx-2">|</span>
-                  <span>投稿日: {{ formatDate(post.created_at) }}</span>
-                  <span v-if="post.published_at" class="mx-2">|</span>
-                  <span v-if="post.published_at">公開日: {{ formatDate(post.published_at) }}</span>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-lg font-medium">{{ post.title }}</h3>
+                    <p class="text-sm text-gray-500">
+                      作成日: {{ formatDate(post.created_at) }}
+                      <span v-if="post.published_at">| 公開日: {{ formatDate(post.published_at) }}</span>
+                    </p>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button
+                      @click="$emit('edit', post)"
+                      class="text-blue-600 hover:text-blue-800"
+                    >
+                      編集
+                    </button>
+                    <button
+                      @click="$emit('delete', post)"
+                      class="text-red-600 hover:text-red-800"
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+
+                <!-- タグ一覧 -->
+                <div v-if="post.tags && post.tags.length > 0" class="mt-2">
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="tagId in post.tags"
+                      :key="tagId"
+                      class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {{ getTagName(tagId) }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <!-- ログインユーザーのみに表示 -->
-          <div v-if="auth.isAuthenticated" class="flex space-x-2 ml-4">
-            <button
-              @click.stop="$emit('edit', post)"
-              class="text-blue-600 hover:text-blue-800"
-            >
-              編集
-            </button>
-            <button
-              @click.stop="handleDelete(post)"
-              class="text-red-600 hover:text-red-800"
-            >
-              削除
-            </button>
           </div>
         </div>
       </div>
@@ -103,6 +115,7 @@ import { ref, onMounted, watch, defineExpose } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuth } from '../stores/auth';
+import { tags } from '@/config/tags';
 
 const props = defineProps({
   userId: {
@@ -111,7 +124,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['edit']);
+const emit = defineEmits(['edit', 'delete']);
 
 const router = useRouter();
 
@@ -190,6 +203,10 @@ const handlePostClick = (post) => {
 
 const handleImageError = (event) => {
   event.target.src = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085';
+};
+
+const getTagName = (tagId) => {
+  return tags[tagId] || '不明なタグ';
 };
 
 watch([currentPage, currentTab], () => {
