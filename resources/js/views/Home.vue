@@ -31,13 +31,32 @@
           />
         </div>
       </div>
+
+      <!-- タグフィルター -->
+      <div class="mb-6">
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="(name, id) in tags"
+            :key="id"
+            @click="toggleTagFilter(Number(id))"
+            :class="[
+              'px-3 py-1 rounded-full text-sm font-medium transition-colors',
+              selectedTags.includes(Number(id))
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            {{ name }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="flex justify-center items-center h-64">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
     </div>
 
-    <div v-else-if="posts.length === 0" class="text-center py-12">
+    <div v-else-if="filteredPosts.length === 0" class="text-center py-12">
       <p class="text-gray-500">
         {{ activeTab === 'liked' ? 'いいねした記事はありません。' : '記事が見つかりませんでした。' }}
       </p>
@@ -45,7 +64,7 @@
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
-        v-for="post in posts"
+        v-for="post in filteredPosts"
         :key="post.id"
         class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
         @click="handlePostClick(post.id)"
@@ -76,16 +95,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { tags } from '@/config/tags'
 
 const router = useRouter()
 const posts = ref([])
 const loading = ref(true)
 const searchQuery = ref('')
 const activeTab = ref('all')
+const selectedTags = ref([])
 let searchTimeout = null
+
+// フィルタリングされた投稿を計算
+const filteredPosts = computed(() => {
+  if (selectedTags.value.length === 0) {
+    return posts.value;
+  }
+  
+  return posts.value.filter(post => {
+    if (!post.tags || post.tags.length === 0) {
+      return false;
+    }
+    return selectedTags.value.every(tagId => post.tags.includes(tagId));
+  });
+});
+
+// タグフィルターの切り替え
+const toggleTagFilter = (tagId) => {
+  const index = selectedTags.value.indexOf(tagId);
+  if (index === -1) {
+    selectedTags.value.push(tagId);
+  } else {
+    selectedTags.value.splice(index, 1);
+  }
+};
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ja-JP', {
