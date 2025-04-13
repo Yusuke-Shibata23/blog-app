@@ -36,7 +36,7 @@ class PostSeeder extends Seeder
             $post->title = $postData['title'];
             $post->content = $content;
             $post->status = $postData['status'] ?? 'published';
-            $post->tags = json_encode($postData['tags'], JSON_UNESCAPED_UNICODE);
+            $post->tags = $postData['tags'];
             $post->user_id = $user->id;
 
             // 公開日時の設定

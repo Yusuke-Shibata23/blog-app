@@ -36,7 +36,6 @@ class Post extends Model
     protected $casts = [
         'published_at' => 'datetime',
         'scheduled_at' => 'datetime',
-        'tags' => 'array'
     ];
 
     protected $appends = [
@@ -191,5 +190,34 @@ class Post extends Model
         return array_map(function ($tagId) use ($tagList) {
             return $tagList[$tagId] ?? null;
         }, $this->tags);
+    }
+
+    /**
+     * タグを取得する
+     *
+     * @param string $value
+     * @return array
+     */
+    public function getTagsAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        return json_decode($value, true) ?? [];
+    }
+
+    /**
+     * タグを保存する
+     *
+     * @param array|string $value
+     * @return void
+     */
+    public function setTagsAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['tags'] = json_encode($value, JSON_UNESCAPED_UNICODE);
+        } else {
+            $this->attributes['tags'] = $value;
+        }
     }
 }
