@@ -86,11 +86,32 @@ class PostController extends Controller
             'published_at' => 'nullable|date',
             'scheduled_at' => 'nullable|date|after:now',
             'images.*' => 'nullable|image|max:2048',
-            'thumbnail' => 'nullable|image|max:2048'
+            'thumbnail' => 'nullable|image|max:2048',
+            'tags' => 'nullable|array',
+            'tags.*' => 'integer'
+        ], [
+            'title.required' => 'タイトルは必須です。',
+            'title.max' => 'タイトルは255文字以内で入力してください。',
+            'content.required' => '内容は必須です。',
+            'status.required' => 'ステータスは必須です。',
+            'status.in' => '無効なステータスです。',
+            'images.*.image' => '画像ファイルをアップロードしてください。',
+            'images.*.max' => '画像サイズは2MB以下にしてください。',
+            'thumbnail.image' => 'サムネイル画像をアップロードしてください。',
+            'thumbnail.max' => 'サムネイル画像サイズは2MB以下にしてください。',
+            'tags.array' => 'タグは配列で指定してください。',
+            'tags.*.integer' => 'タグIDは整数で指定してください。'
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            \Log::error('バリデーションエラー', [
+                'errors' => $validator->errors(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json([
+                'message' => '入力内容に問題があります。',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $post = Post::create([
@@ -99,7 +120,8 @@ class PostController extends Controller
             'status' => $request->status,
             'published_at' => $request->published_at,
             'scheduled_at' => $request->scheduled_at,
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
+            'tags' => $request->tags ?? []
         ]);
 
         if ($request->hasFile('thumbnail')) {
@@ -213,7 +235,9 @@ class PostController extends Controller
                 'images.*' => 'nullable|file|mimes:jpeg,png,gif|max:10240',
                 'thumbnail' => 'nullable|file|mimes:jpeg,png,gif|max:2048',
                 'thumbnail_path' => 'nullable|string',
-                'delete_thumbnail' => 'nullable|boolean'
+                'delete_thumbnail' => 'nullable|boolean',
+                'tags' => 'nullable|array',
+                'tags.*' => 'integer'
             ], [
                 'title.required' => 'タイトルは必須です。',
                 'title.max' => 'タイトルは255文字以内で入力してください。',
@@ -226,7 +250,9 @@ class PostController extends Controller
                 'thumbnail.file' => 'サムネイル画像をアップロードしてください。',
                 'thumbnail.mimes' => 'サムネイル画像はJPEG、PNG、GIF形式のみアップロード可能です。',
                 'thumbnail.max' => 'サムネイル画像サイズは2MB以下にしてください。',
-                'delete_thumbnail.boolean' => '無効な削除オプションです。'
+                'delete_thumbnail.boolean' => '無効な削除オプションです。',
+                'tags.array' => 'タグは配列で指定してください。',
+                'tags.*.integer' => 'タグIDは整数で指定してください。'
             ]);
 
             if ($validator->fails()) {
@@ -295,7 +321,8 @@ class PostController extends Controller
             $post->update([
                 'title' => $request->title,
                 'content' => $content,
-                'status' => $request->status
+                'status' => $request->status,
+                'tags' => $request->tags ?? []
             ]);
 
             \Log::info('投稿の更新が完了しました', [

@@ -71,64 +71,12 @@
           class="mt-1"
         />
       </div>
-      <!-- 画像アップロードフォームを一時的にコメントアウト
-      <div>
-        <label class="block text-sm font-medium text-gray-700">画像</label>
-        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-          <div class="space-y-1 text-center">
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-              aria-hidden="true"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <div class="mt-4">
-              <div class="flex text-sm text-gray-600">
-                <label
-                  for="images"
-                  class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                >
-                  <span>画像をアップロード</span>
-                  <input
-                    id="images"
-                    name="images"
-                    type="file"
-                    class="sr-only"
-                    multiple
-                    accept="image/*"
-                    @change="handleImageChange"
-                  />
-                </label>
-                <p class="pl-1">またはドラッグ＆ドロップ</p>
-              </div>
-            </div>
-            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-          </div>
-        </div>
-        <div v-if="form.images.length > 0" class="mt-4 grid grid-cols-2 gap-4">
-          <div v-for="(image, index) in form.images" :key="index" class="relative">
-            <img :src="image.url" class="w-full h-32 object-cover rounded-lg" />
-            <button
-              type="button"
-              @click="removeImage(index)"
-              class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+
+      <div class="mt-4">
+        <label class="block text-sm font-medium text-gray-700">タグ</label>
+        <TagSelector v-model="form.tags" />
       </div>
-      -->
+
       <div>
         <label for="status" class="block text-sm font-medium text-gray-700">ステータス</label>
         <select
@@ -171,20 +119,19 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
 import MarkdownEditor from './MarkdownEditor.vue'
+import TagSelector from './TagSelector.vue'
 
 const props = defineProps({
   post: {
     type: Object,
-    default: () => ({
-      title: '',
-      content: '',
-      status: 'draft',
-      scheduled_at: null,
-      images: []
-    })
+    default: () => ({})
+  },
+  isEditing: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -194,15 +141,13 @@ const loading = ref(false);
 const imageInput = ref(null);
 
 const form = ref({
-  title: props.post.title,
-  content: props.post.content,
-  status: props.post.status,
-  scheduled_at: props.post.scheduled_at,
-  images: props.post.images || [],
-  thumbnail: props.post.thumbnail_url ? {
-    url: props.post.thumbnail_url
-  } : null,
-  is_scheduled: false
+  title: props.post?.title || '',
+  content: props.post?.content || '',
+  status: props.post?.status || 'draft',
+  scheduled_at: props.post?.scheduled_at || null,
+  images: [],
+  thumbnail: null,
+  tags: props.post?.tags ? props.post.tags.map(tag => Number(tag)) : []
 });
 
 const isEditing = computed(() => !!props.post.id);
@@ -285,6 +230,13 @@ watch(
   { deep: true }
 );
 
+// 編集モードの場合、既存のタグを設定
+watch(() => props.post, (newPost) => {
+  if (newPost && newPost.tags) {
+    form.value.tags = newPost.tags.map(tag => Number(tag));
+  }
+}, { immediate: true });
+
 // フォームの送信処理
 const handleSubmit = async () => {
   try {
@@ -333,6 +285,13 @@ const handleSubmit = async () => {
       });
     }
 
+    // タグの処理
+    if (form.value.tags && form.value.tags.length > 0) {
+      form.value.tags.forEach((tag, index) => {
+        formData.append(`tags[${index}]`, tag);
+      });
+    }
+
     // デバッグ用のログ
     console.log('送信するデータ:', {
       title: form.value.title,
@@ -341,7 +300,8 @@ const handleSubmit = async () => {
       scheduled_at: form.value.scheduled_at,
       thumbnail: form.value.thumbnail,
       images: form.value.images,
-      deletedImages: form.value.deletedImages
+      deletedImages: form.value.deletedImages,
+      tags: form.value.tags
     });
 
     // FormDataの内容を確認
@@ -403,6 +363,31 @@ const handleCancel = () => {
   emit('cancel');
   emit('close');
 };
+
+onMounted(() => {
+  console.log('PostForm mounted');
+  console.log('props.post:', props.post);
+  console.log('props.isEditing:', props.isEditing);
+  
+  if (props.isEditing && props.post) {
+    console.log('Editing existing post');
+    console.log('Post tags:', props.post.tags);
+    
+    form.value = {
+      title: props.post.title,
+      content: props.post.content,
+      status: props.post.status,
+      scheduled_at: props.post.scheduled_at,
+      images: props.post.images || [],
+      thumbnail: props.post.thumbnail_path ? {
+        url: props.post.thumbnail_url
+      } : null,
+      tags: props.post.tags ? props.post.tags.map(tag => Number(tag)) : []
+    };
+    
+    console.log('Form initialized with:', form.value);
+  }
+});
 </script>
 
 <style scoped>

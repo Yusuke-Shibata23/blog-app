@@ -24,7 +24,8 @@ class Post extends Model
         'published_at',
         'scheduled_at',
         'thumbnail_path',
-        'user_id'
+        'user_id',
+        'tags'
     ];
 
     /**
@@ -35,6 +36,7 @@ class Post extends Model
     protected $casts = [
         'published_at' => 'datetime',
         'scheduled_at' => 'datetime',
+        'tags' => 'array'
     ];
 
     protected $appends = [
@@ -117,20 +119,20 @@ class Post extends Model
      * タグでフィルタリングするスコープ
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string|array $tags
+     * @param int|array $tagIds
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeWithTags($query, $tags)
+    public function scopeWithTags($query, $tagIds)
     {
-        if (empty($tags)) {
+        if (empty($tagIds)) {
             return $query;
         }
 
-        $tags = is_array($tags) ? $tags : [$tags];
+        $tagIds = is_array($tagIds) ? $tagIds : [$tagIds];
 
-        return $query->where(function ($query) use ($tags) {
-            foreach ($tags as $tag) {
-                $query->orWhereJsonContains('tags', $tag);
+        return $query->where(function ($query) use ($tagIds) {
+            foreach ($tagIds as $tagId) {
+                $query->orWhereJsonContains('tags', $tagId);
             }
         });
     }
@@ -172,5 +174,22 @@ class Post extends Model
     public function getLikesCountAttribute()
     {
         return $this->likes()->count();
+    }
+
+    /**
+     * タグ名の配列を取得
+     *
+     * @return array
+     */
+    public function getTagNamesAttribute()
+    {
+        if (empty($this->tags)) {
+            return [];
+        }
+
+        $tagList = config('const.tags');
+        return array_map(function ($tagId) use ($tagList) {
+            return $tagList[$tagId] ?? null;
+        }, $this->tags);
     }
 }
