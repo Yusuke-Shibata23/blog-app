@@ -80,13 +80,21 @@
         </div>
         
         <!-- コンテンツ部分 -->
-        <div class="p-6">
-          <h2 class="text-xl font-bold mb-2">{{ post.title }}</h2>
-          <p class="text-gray-600 mb-4 line-clamp-3">{{ post.excerpt }}</p>
-          <div class="flex items-center text-sm text-gray-500">
-            <span>投稿者: {{ post.user?.name || '匿名' }}</span>
-            <span class="mx-2">|</span>
-            <span>投稿日: {{ formatDate(post.created_at) }}</span>
+        <div class="p-4">
+          <h3 class="text-lg font-semibold mb-2">{{ post.title }}</h3>
+          <p class="text-gray-600 text-sm mb-2">
+            {{ new Date(post.created_at).toLocaleDateString('ja-JP') }}
+          </p>
+          <p class="text-gray-700 mb-4 line-clamp-3">{{ post.content }}</p>
+          <!-- タグ表示 -->
+          <div v-if="post.tags && post.tags.length > 0" class="flex flex-wrap gap-2">
+            <span
+              v-for="tagId in post.tags"
+              :key="tagId"
+              class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+            >
+              {{ getTagName(Number(tagId)) }}
+            </span>
           </div>
         </div>
       </div>
@@ -193,6 +201,11 @@ watch(activeTab, () => {
 onMounted(() => {
   fetchPosts()
 })
+
+// タグ名を取得する関数
+const getTagName = (tagId) => {
+  return tags[tagId] || '不明なタグ'
+}
 </script>
 
 <style scoped>
