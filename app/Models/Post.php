@@ -157,7 +157,12 @@ class Post extends Model
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail_path ? Storage::url($this->thumbnail_path) : null;
+        if ($this->thumbnail_path) {
+            return Storage::url($this->thumbnail_path);
+        }
+        
+        // デフォルトサムネイルのURLを返す
+        return 'https://images.unsplash.com/photo-1498050108023-c5249f4df085';
     }
 
     public function likes()
