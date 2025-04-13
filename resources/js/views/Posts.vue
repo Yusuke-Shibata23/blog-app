@@ -29,6 +29,7 @@
     <MyPosts
       ref="postList"
       @edit="handleEditPost"
+      @delete="handleDeletePost"
     />
   </div>
 </template>
@@ -38,6 +39,7 @@ import { ref, onMounted } from 'vue'
 import { useAuth } from '@/stores/auth'
 import MyPosts from '@/components/MyPosts.vue'
 import PostForm from '@/components/PostForm.vue'
+import axios from 'axios'
 
 const auth = useAuth()
 const showPostForm = ref(false)
@@ -57,33 +59,46 @@ const closePostForm = () => {
   selectedPost.value = null
 }
 
-// 投稿の保存完了時の処理
-const handlePostSubmit = () => {
-  // フォームはhandlePostSuccessで閉じるため、ここでは何もしない
+// 投稿の編集
+const handleEditPost = (post) => {
+  selectedPost.value = post
+  showPostForm.value = true
+}
+
+// 投稿の削除
+const handleDeletePost = async (post) => {
+  if (confirm('この投稿を削除してもよろしいですか？')) {
+    try {
+      await axios.delete(`/api/posts/${post.id}`)
+      if (postList.value) {
+        await postList.value.fetchPosts()
+      }
+      alert('投稿を削除しました。')
+    } catch (error) {
+      console.error('投稿の削除に失敗しました:', error)
+      alert('投稿の削除に失敗しました。')
+    }
+  }
 }
 
 // 投稿の保存成功時の処理
 const handlePostSuccess = async (updatedPost) => {
   try {
     // モーダルを閉じる
-    showPostForm.value = false;
-    selectedPost.value = null;
+    showPostForm.value = false
+    selectedPost.value = null
     
     // 投稿一覧を再取得
-    await postList.value.fetchPosts();
+    if (postList.value) {
+      await postList.value.fetchPosts()
+    }
     
     // 成功メッセージを表示
-    alert('投稿を保存しました。');
+    alert('投稿を保存しました。')
   } catch (error) {
-    console.error('エラーが発生しました:', error);
-    alert('エラーが発生しました。');
+    console.error('エラーが発生しました:', error)
+    alert('エラーが発生しました。')
   }
-};
-
-// 投稿の編集
-const handleEditPost = (post) => {
-  selectedPost.value = post
-  showPostForm.value = true
 }
 </script>
 

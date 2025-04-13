@@ -58,13 +58,13 @@
                   </div>
                   <div class="flex space-x-2">
                     <button
-                      @click="$emit('edit', post)"
+                      @click.stop="$emit('edit', post)"
                       class="text-blue-600 hover:text-blue-800"
                     >
                       編集
                     </button>
                     <button
-                      @click="$emit('delete', post)"
+                      @click.stop="$emit('delete', post)"
                       class="text-red-600 hover:text-red-800"
                     >
                       削除
