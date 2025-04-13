@@ -6,12 +6,25 @@
 
     <div v-else-if="post" class="max-w-4xl mx-auto">
       <!-- サムネイル画像 -->
-      <div class="mb-8">
+      <div v-if="post.thumbnail_url" class="mb-6">
         <img
-          :src="post.thumbnail_url || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085'"
+          :src="post.thumbnail_url"
           :alt="post.title"
-          class="w-full h-96 object-cover rounded-lg shadow-lg"
+          class="w-full h-64 object-cover rounded-lg"
         />
+      </div>
+
+      <!-- タグ一覧 -->
+      <div v-if="post.tags && post.tags.length > 0" class="mb-6">
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-for="tagId in post.tags"
+            :key="tagId"
+            class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+          >
+            {{ getTagName(tagId) }}
+          </span>
+        </div>
       </div>
 
       <div class="bg-white rounded-lg shadow-md p-8">
@@ -126,6 +139,8 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { useAuth } from '@/stores/auth';
+import { tags } from '@/config/tags';
 
 const route = useRoute();
 const router = useRouter();
@@ -220,6 +235,10 @@ const checkLikeStatus = async () => {
   } catch (error) {
     console.error('いいね状態の取得に失敗しました:', error);
   }
+};
+
+const getTagName = (tagId) => {
+  return tags[tagId] || '不明なタグ';
 };
 
 onMounted(async () => {
