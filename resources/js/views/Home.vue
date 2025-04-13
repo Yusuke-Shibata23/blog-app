@@ -110,16 +110,28 @@ let searchTimeout = null
 
 // フィルタリングされた投稿を計算
 const filteredPosts = computed(() => {
-  if (selectedTags.value.length === 0) {
-    return posts.value;
+  let filtered = posts.value;
+
+  // タグでフィルタリング
+  if (selectedTags.value.length > 0) {
+    filtered = filtered.filter(post => {
+      if (!post.tags || post.tags.length === 0) return false;
+      // タグIDを数値に変換して比較
+      const postTagIds = post.tags.map(tag => Number(tag));
+      return selectedTags.value.some(tagId => postTagIds.includes(tagId));
+    });
   }
-  
-  return posts.value.filter(post => {
-    if (!post.tags || post.tags.length === 0) {
-      return false;
-    }
-    return selectedTags.value.every(tagId => post.tags.includes(tagId));
-  });
+
+  // 検索クエリでフィルタリング
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(post => 
+      post.title.toLowerCase().includes(query) || 
+      post.content.toLowerCase().includes(query)
+    );
+  }
+
+  return filtered;
 });
 
 // タグフィルターの切り替え
@@ -130,6 +142,7 @@ const toggleTagFilter = (tagId) => {
   } else {
     selectedTags.value.splice(index, 1);
   }
+  console.log('Selected tags:', selectedTags.value); // デバッグ用
 };
 
 const formatDate = (date) => {
@@ -158,6 +171,7 @@ const fetchPosts = async (query = '') => {
       }
     })
     posts.value = response.data.data || []
+    console.log('Fetched posts:', posts.value); // デバッグ用
   } catch (error) {
     console.error('投稿の取得に失敗しました:', error)
   } finally {
