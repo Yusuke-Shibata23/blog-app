@@ -7,7 +7,7 @@
             "content_file": "01-kyoto-temple-tour.md",
             "published_at": "2024-03-15 10:00:00",
             "author_email": "yamada@example.com",
-            "tags": ["旅行", "京都", "紅葉", "古寺"],
+            "tags": [11, 15],
             "images": [
                 {
                     "filename": "kyoto-temple-1.jpg",
@@ -28,7 +28,7 @@
             "content_file": "02-italian-pasta-basics.md",
             "published_at": "2024-03-16 11:00:00",
             "author_email": "suzuki@example.com",
-            "tags": ["料理", "イタリアン", "パスタ", "レシピ"],
+            "tags": [11],
             "images": [
                 {
                     "filename": "pasta-1.jpg",
@@ -49,7 +49,7 @@
             "content_file": "03-interstellar-review.md",
             "published_at": "2024-03-17 12:00:00",
             "author_email": "sato@example.com",
-            "tags": ["映画", "SF", "ノーラン", "レビュー"],
+            "tags": [3, 15],
             "images": [
                 {
                     "filename": "interstellar-1.jpg",
@@ -70,7 +70,7 @@
             "content_file": "04-bill-evans-jazz.md",
             "published_at": "2024-03-18 13:00:00",
             "author_email": "yamada@example.com",
-            "tags": ["音楽", "ジャズ", "ピアノ", "ビル・エバンス"],
+            "tags": [8, 15],
             "images": [
                 {
                     "filename": "bill-evans-1.jpg",
@@ -91,7 +91,7 @@
             "content_file": "05-landscape-photography.md",
             "published_at": "2024-03-19 14:00:00",
             "author_email": "suzuki@example.com",
-            "tags": ["写真", "風景", "カメラ", "テクニック"],
+            "tags": [9, 15],
             "images": [
                 {
                     "filename": "landscape-1.jpg",
@@ -112,7 +112,7 @@
             "content_file": "06-yoga-basics.md",
             "published_at": "2024-03-20 15:00:00",
             "author_email": "sato@example.com",
-            "tags": ["健康", "ヨガ", "フィットネス", "初心者"],
+            "tags": [14, 15],
             "images": [
                 {
                     "filename": "yoga-1.jpg",
@@ -133,7 +133,7 @@
             "content_file": "07-three-body-problem.md",
             "published_at": "2024-03-21 16:00:00",
             "author_email": "yamada@example.com",
-            "tags": ["本", "SF", "中国文学", "書評"],
+            "tags": [4, 15],
             "images": [
                 {
                     "filename": "three-body-1.jpg",
@@ -154,7 +154,7 @@
             "content_file": "08-kusama-exhibition.md",
             "published_at": "2024-03-22 17:00:00",
             "author_email": "suzuki@example.com",
-            "tags": ["アート", "展覧会", "草間彌生", "現代アート"],
+            "tags": [9, 15],
             "images": [
                 {
                     "filename": "kusama-1.jpg",
