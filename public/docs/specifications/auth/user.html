@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>user</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>ユーザー情報取得機能仕様書</h1>
+<h2>1. 概要</h2>
+<ul>
+<li><strong>目的</strong>: ログイン中のユーザー情報を取得する</li>
+<li><strong>主要機能</strong>: 認証済みユーザーの情報取得</li>
+<li><strong>対象ユーザー</strong>: ログイン中のユーザー</li>
+</ul>
+<h2>2. 機能一覧</h2>
+<p>| 機能ID | 機能名 | 説明 | 優先度 |
+|--------|--------|------|--------|
+| USER001 | ユーザー情報取得 | ログインユーザーの情報を取得 | 高 |</p>
+<h2>3. レスポンス形式</h2>
+<pre><code class="language-json">{
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;ユーザー名&quot;,
+    &quot;email&quot;: &quot;user@example.com&quot;,
+    &quot;created_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;
+}
+</code></pre>
+<h2>4. セキュリティ要件</h2>
+<ul>
+<li>認証済みユーザーのみアクセス可能</li>
+<li>トークンの検証（Laravelデフォルト）</li>
+</ul>
+<h2>5. パフォーマンス要件</h2>
+<ul>
+<li>レスポンス時間: 1秒以内</li>
+</ul>
+<h2>6. コンポーネント設計</h2>
+<h3>6.1 ユーザー情報表示</h3>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;div v-if=&quot;user&quot; class=&quot;user-info&quot;&gt;
+    &lt;h2&gt;{{ user.name }}&lt;/h2&gt;
+    &lt;p&gt;{{ user.email }}&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div v-else class=&quot;loading&quot;&gt;
+    読み込み中...
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<h3>6.2 状態管理</h3>
+<pre><code class="language-typescript">interface UserState {
+  user: User | null;
+  loading: boolean;
+}
+
+const state = reactive&lt;UserState&gt;({
+  user: null,
+  loading: true
+});
+</code></pre>
+<h3>6.3 メソッド</h3>
+<pre><code class="language-typescript">const fetchUser = async () =&gt; {
+  state.loading = true;
+  
+  try {
+    const response = await authStore.getUser();
+    state.user = response.data;
+  } finally {
+    state.loading = false;
+  }
+};
+</code></pre>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>routes</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>APIルート仕様書</h1>
+<h2>1. 認証関連のルート（認証不要）</h2>
+<h3>1.1 ユーザー登録</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/register</code></li>
+<li><strong>リクエストボディ</strong>:</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;name&quot;: &quot;ユーザー名&quot;,
+    &quot;email&quot;: &quot;user@example.com&quot;,
+    &quot;password&quot;: &quot;password123&quot;,
+    &quot;password_confirmation&quot;: &quot;password123&quot;
+}
+</code></pre>
+<ul>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（201）:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;user&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;ユーザー名&quot;,
+        &quot;email&quot;: &quot;user@example.com&quot;,
+        &quot;created_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;,
+        &quot;updated_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;
+    },
+    &quot;token&quot;: &quot;アクセストークン&quot;
+}
+</code></pre>
+<ul>
+<li>エラー時（422）: バリデーションエラーメッセージ</li>
+</ul>
+<h3>1.2 ログイン</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/login</code></li>
+<li><strong>リクエストボディ</strong>:</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;email&quot;: &quot;user@example.com&quot;,
+    &quot;password&quot;: &quot;password123&quot;
+}
+</code></pre>
+<ul>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;user&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;ユーザー名&quot;,
+        &quot;email&quot;: &quot;user@example.com&quot;,
+        &quot;created_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;,
+        &quot;updated_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;
+    },
+    &quot;token&quot;: &quot;アクセストークン&quot;
+}
+</code></pre>
+<ul>
+<li>エラー時（401）: 認証エラーメッセージ</li>
+</ul>
+<h2>2. 認証が必要なルート</h2>
+<h3>2.1 ログアウト</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/logout</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;message&quot;: &quot;ログアウトしました。&quot;
+}
+</code></pre>
+<h3>2.2 ユーザー情報取得</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/user</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;ユーザー名&quot;,
+    &quot;email&quot;: &quot;user@example.com&quot;,
+    &quot;created_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-03-30T01:56:00.000000Z&quot;
+}
+</code></pre>
+<h3>2.3 投稿関連</h3>
+<h4>2.3.1 下書き一覧取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/drafts</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 下書き投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.2 予約投稿一覧取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/scheduled</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 予約投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.3 公開済み投稿一覧取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/published</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 公開済み投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.4 自分の投稿一覧取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/my</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 自分の投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.5 投稿作成</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/posts</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>リクエストボディ</strong>: 投稿データ</li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（201）: 作成された投稿データ</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.6 投稿詳細取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/{post}</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 投稿詳細データ</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.7 投稿更新</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>PUT /api/posts/{post}</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>リクエストボディ</strong>: 更新する投稿データ</li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 更新された投稿データ</li>
+</ul>
+</li>
+</ul>
+<h4>2.3.8 投稿削除</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>DELETE /api/posts/{post}</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（204）: レスポンスボディなし</li>
+</ul>
+</li>
+</ul>
+<h3>2.4 画像アップロード</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/upload-image</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>リクエストボディ</strong>: 画像ファイル</li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: アップロードされた画像のURL</li>
+</ul>
+</li>
+</ul>
+<h3>2.5 いいね機能</h3>
+<h4>2.5.1 いいねのトグル</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>POST /api/posts/{post}/toggle-like</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: いいね状態の更新結果</li>
+</ul>
+</li>
+</ul>
+<h4>2.5.2 いいね状態取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/{post}/like-status</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: いいね状態データ</li>
+</ul>
+</li>
+</ul>
+<h4>2.5.3 いいねした投稿一覧取得</h4>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/liked</code></li>
+<li><strong>ヘッダー</strong>: <code>Authorization: Bearer {token}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: いいねした投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h2>3. 公開投稿関連のルート（認証不要）</h2>
+<h3>3.1 公開投稿一覧取得</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 公開投稿の配列</li>
+</ul>
+</li>
+</ul>
+<h3>3.2 公開投稿詳細取得</h3>
+<ul>
+<li><strong>エンドポイント</strong>: <code>GET /api/posts/public/{post}</code></li>
+<li><strong>レスポンス</strong>:
+<ul>
+<li>成功時（200）: 公開投稿の詳細データ</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</body>
+</html>

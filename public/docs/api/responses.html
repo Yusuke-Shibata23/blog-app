@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>responses</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>APIレスポンス形式設計書</h1>
+<h2>1. 共通レスポンス形式</h2>
+<h3>1.1 成功レスポンス</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        // データオブジェクト
+    },
+    &quot;meta&quot;: {
+        // メタデータ（オプション）
+    }
+}
+</code></pre>
+<h3>1.2 エラーレスポンス</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;error&quot;,
+    &quot;message&quot;: &quot;エラーメッセージ&quot;,
+    &quot;errors&quot;: {
+        // エラー詳細（オプション）
+    }
+}
+</code></pre>
+<h2>2. ステータスコード</h2>
+<h3>2.1 成功系</h3>
+<ul>
+<li><code>200 OK</code>: リクエスト成功</li>
+<li><code>201 Created</code>: リソース作成成功</li>
+<li><code>204 No Content</code>: リクエスト成功（レスポンスボディなし）</li>
+</ul>
+<h3>2.2 クライアントエラー</h3>
+<ul>
+<li><code>400 Bad Request</code>: リクエストが不正</li>
+<li><code>401 Unauthorized</code>: 認証が必要</li>
+<li><code>403 Forbidden</code>: アクセス権限なし</li>
+<li><code>404 Not Found</code>: リソースが見つからない</li>
+<li><code>422 Unprocessable Entity</code>: バリデーションエラー</li>
+</ul>
+<h3>2.3 サーバーエラー</h3>
+<ul>
+<li><code>500 Internal Server Error</code>: サーバー内部エラー</li>
+<li><code>503 Service Unavailable</code>: サービス利用不可</li>
+</ul>
+<h2>3. データ型定義</h2>
+<h3>3.1 基本型</h3>
+<pre><code class="language-typescript">type BasicType = {
+    string: string;      // 文字列
+    integer: number;     // 整数
+    float: number;       // 浮動小数点数
+    boolean: boolean;    // 真偽値
+    datetime: string;    // ISO 8601形式の日時
+    date: string;        // ISO 8601形式の日付
+    time: string;        // ISO 8601形式の時刻
+}
+</code></pre>
+<h3>3.2 複合型</h3>
+<pre><code class="language-typescript">type ComplexType = {
+    array: T[];         // 配列
+    object: {           // オブジェクト
+        [key: string]: T;
+    };
+    nullable: T | null; // null許容
+}
+</code></pre>
+<h2>4. リソース別レスポンス形式</h2>
+<h3>4.1 ユーザー</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        &quot;user&quot;: {
+            &quot;id&quot;: &quot;integer&quot;,
+            &quot;name&quot;: &quot;string&quot;,
+            &quot;email&quot;: &quot;string&quot;,
+            &quot;created_at&quot;: &quot;datetime&quot;,
+            &quot;updated_at&quot;: &quot;datetime&quot;,
+            &quot;profile&quot;: {
+                &quot;bio&quot;: &quot;string&quot;,
+                &quot;avatar_url&quot;: &quot;string&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3>4.2 投稿</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        &quot;post&quot;: {
+            &quot;id&quot;: &quot;integer&quot;,
+            &quot;title&quot;: &quot;string&quot;,
+            &quot;content&quot;: &quot;string&quot;,
+            &quot;user_id&quot;: &quot;integer&quot;,
+            &quot;created_at&quot;: &quot;datetime&quot;,
+            &quot;updated_at&quot;: &quot;datetime&quot;,
+            &quot;tags&quot;: [&quot;string&quot;],
+            &quot;author&quot;: {
+                &quot;id&quot;: &quot;integer&quot;,
+                &quot;name&quot;: &quot;string&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3>4.3 タグ</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        &quot;tag&quot;: {
+            &quot;id&quot;: &quot;integer&quot;,
+            &quot;name&quot;: &quot;string&quot;,
+            &quot;slug&quot;: &quot;string&quot;,
+            &quot;post_count&quot;: &quot;integer&quot;
+        }
+    }
+}
+</code></pre>
+<h2>5. ページネーション</h2>
+<h3>5.1 ページネーション付きレスポンス</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        &quot;items&quot;: [
+            // アイテムの配列
+        ],
+        &quot;meta&quot;: {
+            &quot;current_page&quot;: &quot;integer&quot;,
+            &quot;from&quot;: &quot;integer&quot;,
+            &quot;last_page&quot;: &quot;integer&quot;,
+            &quot;per_page&quot;: &quot;integer&quot;,
+            &quot;to&quot;: &quot;integer&quot;,
+            &quot;total&quot;: &quot;integer&quot;
+        },
+        &quot;links&quot;: {
+            &quot;first&quot;: &quot;string&quot;,
+            &quot;last&quot;: &quot;string&quot;,
+            &quot;prev&quot;: &quot;string | null&quot;,
+            &quot;next&quot;: &quot;string | null&quot;
+        }
+    }
+}
+</code></pre>
+<h2>6. エラーレスポンス詳細</h2>
+<h3>6.1 バリデーションエラー</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;error&quot;,
+    &quot;message&quot;: &quot;The given data was invalid.&quot;,
+    &quot;errors&quot;: {
+        &quot;field_name&quot;: [
+            &quot;エラーメッセージ1&quot;,
+            &quot;エラーメッセージ2&quot;
+        ]
+    }
+}
+</code></pre>
+<h3>6.2 認証エラー</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;error&quot;,
+    &quot;message&quot;: &quot;Unauthenticated.&quot;,
+    &quot;errors&quot;: {
+        &quot;auth&quot;: [&quot;認証に失敗しました&quot;]
+    }
+}
+</code></pre>
+<h3>6.3 権限エラー</h3>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;error&quot;,
+    &quot;message&quot;: &quot;This action is unauthorized.&quot;,
+    &quot;errors&quot;: {
+        &quot;permission&quot;: [&quot;この操作を実行する権限がありません&quot;]
+    }
+}
+</code></pre>
+<h2>7. レスポンスヘッダー</h2>
+<h3>7.1 共通ヘッダー</h3>
+<pre><code>Content-Type: application/json
+X-Request-ID: {uuid}
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+</code></pre>
+<h3>7.2 キャッシュ制御</h3>
+<pre><code>Cache-Control: no-cache, private
+Etag: {etag}
+Last-Modified: {datetime}
+</code></pre>
+
+    </div>
+</body>
+</html>

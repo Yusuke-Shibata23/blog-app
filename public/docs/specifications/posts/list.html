@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>list</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>投稿一覧画面仕様書</h1>
+<h2>1. 概要</h2>
+<ul>
+<li><strong>目的</strong>: 投稿の一覧表示と検索・フィルタリング機能の提供</li>
+<li><strong>主要機能</strong>: 投稿一覧表示、検索、フィルタリング、ページネーション</li>
+<li><strong>対象ユーザー</strong>: ログインユーザー</li>
+</ul>
+<h2>2. 画面レイアウト</h2>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[検索・フィルターエリア]
+    B --&gt; C[検索ボックス]
+    B --&gt; D[タグフィルター]
+    B --&gt; E[ソートオプション]
+    A --&gt; F[投稿一覧エリア]
+    F --&gt; G[投稿カード]
+    G --&gt; H[タイトル]
+    G --&gt; I[投稿者]
+    G --&gt; J[投稿日時]
+    G --&gt; K[タグ]
+    G --&gt; L[プレビュー]
+    A --&gt; M[ページネーション]
+</code></pre>
+<h2>3. 画面遷移</h2>
+<pre><code class="language-mermaid">graph LR
+    A[ダッシュボード] --&gt; B[投稿一覧]
+    B --&gt; C[投稿詳細]
+    B --&gt; D[投稿作成]
+    B --&gt; E[投稿編集]
+</code></pre>
+<h2>4. 機能一覧</h2>
+<p>| 機能ID | 機能名 | 説明 | 優先度 |
+|--------|--------|------|--------|
+| POST001 | 投稿一覧表示 | 投稿の一覧を表示 | 高 |
+| POST002 | 検索機能 | キーワードによる検索 | 高 |
+| POST003 | タグフィルター | タグによるフィルタリング | 中 |
+| POST004 | ソート機能 | 投稿の並び替え | 中 |
+| POST005 | ページネーション | ページ切り替え | 高 |</p>
+<h2>5. 表示項目</h2>
+<p>| 項目ID | 項目名 | 型 | 表示条件 | 備考 |
+|--------|--------|----|----------|------|
+| POST001 | タイトル | text | 常時 | 最大100文字 |
+| POST002 | 投稿者 | text | 常時 | ユーザー名 |
+| POST003 | 投稿日時 | datetime | 常時 | YYYY/MM/DD HH:mm |
+| POST004 | タグ | array | タグあり | 最大5個 |
+| POST005 | プレビュー | text | 常時 | 本文の最初の100文字 |</p>
+<h2>6. 検索・フィルター条件</h2>
+<p>| 条件ID | 条件名 | 型 | 説明 |
+|--------|--------|----|------|
+| SEARCH001 | キーワード | text | タイトル・本文・タグを検索 |
+| FILTER001 | タグ | array | 選択したタグを含む投稿を表示 |
+| SORT001 | 並び順 | select | 新着順/古い順/人気順 |</p>
+<h2>7. エラーメッセージ</h2>
+<p>| エラーコード | メッセージ | 発生条件 |
+|-------------|-----------|----------|
+| POST001 | 投稿の取得に失敗しました | APIエラー |
+| POST002 | 検索条件が不正です | 検索パラメータエラー |
+| POST003 | フィルター条件が不正です | フィルターパラメータエラー |</p>
+<h2>8. アクセシビリティ要件</h2>
+<ul>
+<li>キーボード操作で全ての機能が利用可能</li>
+<li>スクリーンリーダー対応</li>
+<li>色のコントラスト比4.5:1以上</li>
+<li>画像には代替テキストを設定</li>
+<li>タブ順序の最適化</li>
+</ul>
+<h2>9. パフォーマンス要件</h2>
+<ul>
+<li>初期表示時間: 2秒以内</li>
+<li>検索・フィルター適用時間: 1秒以内</li>
+<li>ページネーション切り替え時間: 0.5秒以内</li>
+<li>無限スクロール対応（オプション）</li>
+</ul>
+<h2>10. レスポンシブ対応</h2>
+<ul>
+<li>デスクトップ: 4列グリッド</li>
+<li>タブレット: 2列グリッド</li>
+<li>モバイル: 1列リスト</li>
+<li>ブレークポイント:
+<ul>
+<li>デスクトップ: 1024px以上</li>
+<li>タブレット: 768px-1023px</li>
+<li>モバイル: 767px以下</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</body>
+</html>

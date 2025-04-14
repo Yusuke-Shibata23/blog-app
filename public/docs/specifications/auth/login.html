@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>ログイン画面仕様書</h1>
+<h2>1. 概要</h2>
+<ul>
+<li><strong>目的</strong>: ユーザーの認証を行う</li>
+<li><strong>主要機能</strong>: メールアドレスとパスワードによる認証</li>
+<li><strong>対象ユーザー</strong>: 登録済みユーザー</li>
+</ul>
+<h2>2. 画面レイアウト</h2>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[ログインフォーム]
+    B --&gt; C[メールアドレス入力]
+    B --&gt; D[パスワード入力]
+    B --&gt; E[ログインボタン]
+    B --&gt; F[新規登録リンク]
+    B --&gt; G[エラーメッセージ]
+</code></pre>
+<h2>3. 画面遷移</h2>
+<pre><code class="language-mermaid">graph LR
+    A[トップページ] --&gt; B[ログイン画面]
+    B --&gt; C[新規登録画面]
+    B --&gt; D[ダッシュボード]
+</code></pre>
+<h2>4. 機能一覧</h2>
+<p>| 機能ID | 機能名 | 説明 | 優先度 |
+|--------|--------|------|--------|
+| AUTH001 | ログイン認証 | メールアドレスとパスワードによる認証 | 高 |
+| AUTH002 | 新規登録遷移 | 新規登録画面への遷移 | 中 |
+| AUTH003 | エラー表示 | 認証エラーの表示 | 高 |</p>
+<h2>5. 入力項目</h2>
+<p>| 項目ID | 項目名 | 型 | 必須 | バリデーション | 備考 |
+|--------|--------|----|------|--------------|------|
+| AUTH001 | メールアドレス | email | 必須 | メール形式 | - |
+| AUTH002 | パスワード | password | 必須 | - | - |</p>
+<h2>6. エラーメッセージ</h2>
+<p>| エラーコード | メッセージ | 発生条件 |
+|-------------|-----------|----------|
+| AUTH001 | 認証情報が正しくありません。 | 認証失敗 |
+| AUTH002 | メールアドレスを入力してください | メールアドレス未入力 |
+| AUTH003 | パスワードを入力してください | パスワード未入力 |</p>
+<h2>7. アクセシビリティ要件</h2>
+<ul>
+<li>キーボード操作で全ての機能が利用可能</li>
+<li>スクリーンリーダー対応</li>
+<li>色のコントラスト比4.5:1以上</li>
+<li>エラーメッセージは視覚的かつ音声で通知</li>
+<li>フォームの各項目に適切なラベルと説明文を付与</li>
+</ul>
+<h2>8. セキュリティ要件</h2>
+<ul>
+<li>CSRFトークンの検証（Laravelデフォルト）</li>
+<li>パスワード入力欄はマスク表示</li>
+<li>パスワードの暗号化（bcrypt）</li>
+<li>セキュアなCookie設定（Laravelデフォルト）</li>
+</ul>
+<h2>9. パフォーマンス要件</h2>
+<ul>
+<li>ページロード時間: 2秒以内</li>
+<li>フォーム送信後のレスポンス時間: 1秒以内</li>
+<li>エラーメッセージの表示時間: 0.5秒以内</li>
+</ul>
+<h2>10. コンポーネント設計</h2>
+<h3>10.1 ログインフォーム</h3>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;form @submit.prevent=&quot;handleLogin&quot;&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;email&quot;&gt;メールアドレス&lt;/label&gt;
+      &lt;input
+        id=&quot;email&quot;
+        v-model=&quot;email&quot;
+        type=&quot;email&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;password&quot;&gt;パスワード&lt;/label&gt;
+      &lt;input
+        id=&quot;password&quot;
+        v-model=&quot;password&quot;
+        type=&quot;password&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;button
+      type=&quot;submit&quot;
+      :disabled=&quot;loading&quot;
+    &gt;
+      {{ loading ? 'ログイン中...' : 'ログイン' }}
+    &lt;/button&gt;
+    &lt;div v-if=&quot;error&quot; class=&quot;error-message&quot;&gt;
+      {{ error }}
+    &lt;/div&gt;
+  &lt;/form&gt;
+&lt;/template&gt;
+</code></pre>
+<h3>10.2 状態管理</h3>
+<pre><code class="language-typescript">interface LoginState {
+  email: string;
+  password: string;
+  loading: boolean;
+  error: string | null;
+}
+
+const state = reactive&lt;LoginState&gt;({
+  email: '',
+  password: '',
+  loading: false,
+  error: null
+});
+</code></pre>
+<h3>10.3 メソッド</h3>
+<pre><code class="language-typescript">const handleLogin = async () =&gt; {
+  state.loading = true;
+  state.error = null;
+  
+  try {
+    await authStore.login({
+      email: state.email,
+      password: state.password
+    });
+    router.push('/dashboard');
+  } catch (error) {
+    state.error = '認証情報が正しくありません。';
+  } finally {
+    state.loading = false;
+  }
+};
+</code></pre>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>screens</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>画面設計書</h1>
+<h2>1. ホーム画面（/）</h2>
+<h3>1.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[メインコンテンツ]
+    B --&gt; C[最新投稿一覧]
+    B --&gt; D[人気投稿一覧]
+    B --&gt; E[カテゴリー一覧]
+    A --&gt; F[ナビゲーション]
+    F --&gt; G[ログイン]
+    F --&gt; H[新規登録]
+</code></pre>
+<h3>1.2 DBへのI/O</h3>
+<ul>
+<li><strong>参照</strong>
+<ul>
+<li>最新投稿一覧（postsテーブル）</li>
+<li>人気投稿一覧（postsテーブル、likesテーブル）</li>
+<li>カテゴリー一覧（categoriesテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>1.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[ホーム] --&gt; B[ログイン]
+    A --&gt; C[新規登録]
+    A --&gt; D[投稿詳細]
+</code></pre>
+<h3>1.4 詳細仕様</h3>
+<h4>1.4.1 最新投稿一覧</h4>
+<ul>
+<li><strong>表示件数</strong>: 10件</li>
+<li><strong>表示項目</strong>:
+<ul>
+<li>タイトル</li>
+<li>投稿者名</li>
+<li>投稿日時</li>
+<li>カテゴリー</li>
+<li>いいね数</li>
+</ul>
+</li>
+<li><strong>ソート順</strong>: 投稿日時の降順</li>
+<li><strong>ページネーション</strong>: あり</li>
+</ul>
+<h4>1.4.2 人気投稿一覧</h4>
+<ul>
+<li><strong>表示件数</strong>: 5件</li>
+<li><strong>表示項目</strong>:
+<ul>
+<li>タイトル</li>
+<li>投稿者名</li>
+<li>投稿日時</li>
+<li>カテゴリー</li>
+<li>いいね数</li>
+</ul>
+</li>
+<li><strong>ソート順</strong>: いいね数の降順</li>
+<li><strong>集計期間</strong>: 過去1週間</li>
+</ul>
+<h4>1.4.3 カテゴリー一覧</h4>
+<ul>
+<li><strong>表示形式</strong>: タグ形式</li>
+<li><strong>表示項目</strong>:
+<ul>
+<li>カテゴリー名</li>
+<li>投稿数</li>
+</ul>
+</li>
+<li><strong>ソート順</strong>: 投稿数の降順</li>
+</ul>
+<h4>1.4.4 ヘッダー</h4>
+<ul>
+<li><strong>ロゴ</strong>: アプリケーション名</li>
+<li><strong>ナビゲーション</strong>:
+<ul>
+<li>ログイン（未ログイン時）</li>
+<li>新規登録（未ログイン時）</li>
+<li>検索ボックス</li>
+</ul>
+</li>
+</ul>
+<h4>1.4.5 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 3カラムレイアウト</li>
+<li><strong>タブレット</strong>: 2カラムレイアウト</li>
+<li><strong>スマートフォン</strong>: 1カラムレイアウト</li>
+</ul>
+<h2>2. ログイン画面（/login）</h2>
+<h3>2.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[ログインフォーム]
+    B --&gt; C[メールアドレス入力]
+    B --&gt; D[パスワード入力]
+    B --&gt; E[ログインボタン]
+    B --&gt; F[新規登録リンク]
+    B --&gt; G[エラーメッセージ]
+</code></pre>
+<h3>2.2 DBへのI/O</h3>
+<ul>
+<li><strong>参照</strong>
+<ul>
+<li>ユーザー認証（usersテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>2.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[ログイン] --&gt; B[新規登録]
+    A --&gt; C[投稿一覧]
+</code></pre>
+<h3>2.4 詳細仕様</h3>
+<h4>2.4.1 ログインフォーム</h4>
+<ul>
+<li>
+<p><strong>メールアドレス入力</strong></p>
+<ul>
+<li>型: email</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>メールアドレス形式</li>
+<li>最大255文字</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;メールアドレスを入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>パスワード入力</strong></p>
+<ul>
+<li>型: password</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>最小8文字</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;パスワードを入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>ログインボタン</strong></p>
+<ul>
+<li>ラベル: &quot;ログイン&quot;</li>
+<li>状態:
+<ul>
+<li>通常: 有効</li>
+<li>ローディング中: 無効</li>
+</ul>
+</li>
+<li>クリック時: ログイン処理実行</li>
+</ul>
+</li>
+</ul>
+<h4>2.4.2 エラーメッセージ</h4>
+<ul>
+<li><strong>表示位置</strong>: フォーム上部</li>
+<li><strong>表示タイミング</strong>:
+<ul>
+<li>認証失敗時</li>
+<li>バリデーションエラー時</li>
+</ul>
+</li>
+<li><strong>スタイル</strong>: 赤色のテキスト</li>
+</ul>
+<h4>2.4.3 新規登録リンク</h4>
+<ul>
+<li><strong>表示位置</strong>: フォーム下部</li>
+<li><strong>テキスト</strong>: &quot;アカウントをお持ちでない方はこちら&quot;</li>
+<li><strong>遷移先</strong>: 新規登録画面</li>
+</ul>
+<h4>2.4.4 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 中央配置、幅400px</li>
+<li><strong>タブレット</strong>: 中央配置、幅90%</li>
+<li><strong>スマートフォン</strong>: 中央配置、幅90%</li>
+</ul>
+<h2>3. 新規登録画面（/register）</h2>
+<h3>3.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[登録フォーム]
+    B --&gt; C[名前入力]
+    B --&gt; D[メールアドレス入力]
+    B --&gt; E[パスワード入力]
+    B --&gt; F[パスワード確認入力]
+    B --&gt; G[登録ボタン]
+    B --&gt; H[ログインリンク]
+    B --&gt; I[エラーメッセージ]
+</code></pre>
+<h3>3.2 DBへのI/O</h3>
+<ul>
+<li><strong>登録</strong>
+<ul>
+<li>ユーザー情報（usersテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>3.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[新規登録] --&gt; B[ログイン]
+    A --&gt; C[投稿一覧]
+</code></pre>
+<h3>3.4 詳細仕様</h3>
+<h4>3.4.1 登録フォーム</h4>
+<ul>
+<li>
+<p><strong>名前入力</strong></p>
+<ul>
+<li>型: text</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>最大255文字</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;お名前を入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>メールアドレス入力</strong></p>
+<ul>
+<li>型: email</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>メールアドレス形式</li>
+<li>最大255文字</li>
+<li>重複チェック</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;メールアドレスを入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>パスワード入力</strong></p>
+<ul>
+<li>型: password</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>最小8文字</li>
+<li>英数字混合</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;パスワードを入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>パスワード確認入力</strong></p>
+<ul>
+<li>型: password</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>パスワードと一致</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;パスワードを再入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>登録ボタン</strong></p>
+<ul>
+<li>ラベル: &quot;登録&quot;</li>
+<li>状態:
+<ul>
+<li>通常: 有効</li>
+<li>ローディング中: 無効</li>
+</ul>
+</li>
+<li>クリック時: 登録処理実行</li>
+</ul>
+</li>
+</ul>
+<h4>3.4.2 エラーメッセージ</h4>
+<ul>
+<li><strong>表示位置</strong>: フォーム上部</li>
+<li><strong>表示タイミング</strong>:
+<ul>
+<li>バリデーションエラー時</li>
+<li>登録失敗時</li>
+</ul>
+</li>
+<li><strong>スタイル</strong>: 赤色のテキスト</li>
+</ul>
+<h4>3.4.3 ログインリンク</h4>
+<ul>
+<li><strong>表示位置</strong>: フォーム下部</li>
+<li><strong>テキスト</strong>: &quot;すでにアカウントをお持ちの方はこちら&quot;</li>
+<li><strong>遷移先</strong>: ログイン画面</li>
+</ul>
+<h4>3.4.4 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 中央配置、幅400px</li>
+<li><strong>タブレット</strong>: 中央配置、幅90%</li>
+<li><strong>スマートフォン</strong>: 中央配置、幅90%</li>
+</ul>
+<h2>4. 投稿一覧画面（/posts）</h2>
+<h3>4.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[メインコンテンツ]
+    B --&gt; C[投稿一覧]
+    B --&gt; D[投稿作成ボタン]
+    B --&gt; E[フィルター]
+    E --&gt; F[下書き]
+    E --&gt; G[予約投稿]
+    E --&gt; H[公開済み]
+    E --&gt; I[自分の投稿]
+    A --&gt; J[ナビゲーション]
+    J --&gt; K[ログアウト]
+</code></pre>
+<h3>4.2 DBへのI/O</h3>
+<ul>
+<li><strong>参照</strong>
+<ul>
+<li>投稿一覧（postsテーブル）</li>
+<li>ユーザー情報（usersテーブル）</li>
+<li>いいね情報（likesテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>4.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[投稿一覧] --&gt; B[投稿作成]
+    A --&gt; C[投稿詳細]
+    A --&gt; D[ログアウト]
+</code></pre>
+<h3>4.4 詳細仕様</h3>
+<h4>4.4.1 投稿一覧</h4>
+<ul>
+<li><strong>表示件数</strong>: 20件/ページ</li>
+<li><strong>表示項目</strong>:
+<ul>
+<li>タイトル</li>
+<li>投稿者名</li>
+<li>投稿日時</li>
+<li>カテゴリー</li>
+<li>いいね数</li>
+<li>ステータス（下書き/公開/予約）</li>
+</ul>
+</li>
+<li><strong>ソート順</strong>: 投稿日時の降順</li>
+<li><strong>ページネーション</strong>: あり</li>
+<li><strong>表示形式</strong>: カード形式</li>
+</ul>
+<h4>4.4.2 フィルター</h4>
+<ul>
+<li><strong>ステータスフィルター</strong>:
+<ul>
+<li>下書き</li>
+<li>予約投稿</li>
+<li>公開済み</li>
+</ul>
+</li>
+<li><strong>表示フィルター</strong>:
+<ul>
+<li>自分の投稿</li>
+<li>全ユーザーの投稿</li>
+</ul>
+</li>
+<li><strong>カテゴリーフィルター</strong>:
+<ul>
+<li>カテゴリー選択ドロップダウン</li>
+</ul>
+</li>
+<li><strong>検索フィルター</strong>:
+<ul>
+<li>タイトル検索</li>
+<li>本文検索</li>
+</ul>
+</li>
+</ul>
+<h4>4.4.3 投稿作成ボタン</h4>
+<ul>
+<li><strong>表示位置</strong>: 画面右上</li>
+<li><strong>ラベル</strong>: &quot;新規投稿&quot;</li>
+<li><strong>アイコン</strong>: プラスアイコン</li>
+<li><strong>クリック時</strong>: 投稿作成画面へ遷移</li>
+</ul>
+<h4>4.4.4 ヘッダー</h4>
+<ul>
+<li><strong>ロゴ</strong>: アプリケーション名</li>
+<li><strong>ナビゲーション</strong>:
+<ul>
+<li>ログアウト</li>
+<li>ユーザー名表示</li>
+<li>プロフィールリンク</li>
+</ul>
+</li>
+</ul>
+<h4>4.4.5 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 2カラムレイアウト
+<ul>
+<li>メイン: 投稿一覧</li>
+<li>サイド: フィルター</li>
+</ul>
+</li>
+<li><strong>タブレット</strong>: 1カラムレイアウト
+<ul>
+<li>フィルターは上部に配置</li>
+</ul>
+</li>
+<li><strong>スマートフォン</strong>: 1カラムレイアウト
+<ul>
+<li>フィルターはドロップダウンメニュー</li>
+</ul>
+</li>
+</ul>
+<h4>4.4.6 アクション</h4>
+<ul>
+<li><strong>投稿カードクリック</strong>: 投稿詳細画面へ遷移</li>
+<li><strong>いいねボタン</strong>: いいねの追加/削除</li>
+<li><strong>編集ボタン</strong>: 投稿編集画面へ遷移</li>
+<li><strong>削除ボタン</strong>: 削除確認ダイアログ表示</li>
+</ul>
+<h2>5. 投稿作成画面（/posts/create）</h2>
+<h3>5.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[投稿フォーム]
+    B --&gt; C[タイトル入力]
+    B --&gt; D[本文入力]
+    B --&gt; E[画像アップロード]
+    B --&gt; F[公開設定]
+    F --&gt; G[下書き]
+    F --&gt; H[予約投稿]
+    F --&gt; I[公開]
+    B --&gt; J[保存ボタン]
+    B --&gt; K[エラーメッセージ]
+</code></pre>
+<h3>5.2 DBへのI/O</h3>
+<ul>
+<li><strong>登録</strong>
+<ul>
+<li>投稿情報（postsテーブル）</li>
+<li>画像情報（imagesテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>5.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[投稿作成] --&gt; B[投稿一覧]
+    A --&gt; C[投稿詳細]
+</code></pre>
+<h3>5.4 詳細仕様</h3>
+<h4>5.4.1 投稿フォーム</h4>
+<ul>
+<li>
+<p><strong>タイトル入力</strong></p>
+<ul>
+<li>型: text</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>最大255文字</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;タイトルを入力してください&quot;</li>
+</ul>
+</li>
+<li>
+<p><strong>本文入力</strong></p>
+<ul>
+<li>型: textarea</li>
+<li>必須: はい</li>
+<li>バリデーション:
+<ul>
+<li>最大10000文字</li>
+</ul>
+</li>
+<li>プレースホルダー: &quot;本文を入力してください&quot;</li>
+<li>エディタ機能:
+<ul>
+<li>リッチテキスト編集</li>
+<li>画像挿入</li>
+<li>リンク挿入</li>
+<li>コードブロック</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>画像アップロード</strong></p>
+<ul>
+<li>型: file</li>
+<li>必須: いいえ</li>
+<li>バリデーション:
+<ul>
+<li>最大5MB</li>
+<li>画像形式（jpg, png, gif）</li>
+</ul>
+</li>
+<li>プレビュー表示: あり</li>
+<li>複数アップロード: 可能（最大5枚）</li>
+</ul>
+</li>
+<li>
+<p><strong>公開設定</strong></p>
+<ul>
+<li><strong>下書き</strong>
+<ul>
+<li>ラベル: &quot;下書きとして保存&quot;</li>
+<li>説明: &quot;後で編集できます&quot;</li>
+</ul>
+</li>
+<li><strong>予約投稿</strong>
+<ul>
+<li>ラベル: &quot;予約投稿&quot;</li>
+<li>説明: &quot;指定した日時に自動公開&quot;</li>
+<li>日時選択: 必須</li>
+</ul>
+</li>
+<li><strong>公開</strong>
+<ul>
+<li>ラベル: &quot;公開&quot;</li>
+<li>説明: &quot;すぐに公開されます&quot;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>保存ボタン</strong></p>
+<ul>
+<li>ラベル: &quot;保存&quot;</li>
+<li>状態:
+<ul>
+<li>通常: 有効</li>
+<li>ローディング中: 無効</li>
+</ul>
+</li>
+<li>クリック時: 保存処理実行</li>
+</ul>
+</li>
+</ul>
+<h4>5.4.2 エラーメッセージ</h4>
+<ul>
+<li><strong>表示位置</strong>: フォーム上部</li>
+<li><strong>表示タイミング</strong>:
+<ul>
+<li>バリデーションエラー時</li>
+<li>保存失敗時</li>
+</ul>
+</li>
+<li><strong>スタイル</strong>: 赤色のテキスト</li>
+</ul>
+<h4>5.4.3 ヘッダー</h4>
+<ul>
+<li><strong>ロゴ</strong>: アプリケーション名</li>
+<li><strong>ナビゲーション</strong>:
+<ul>
+<li>投稿一覧への戻るボタン</li>
+<li>ユーザー名表示</li>
+</ul>
+</li>
+</ul>
+<h4>5.4.4 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 中央配置、幅800px</li>
+<li><strong>タブレット</strong>: 中央配置、幅90%</li>
+<li><strong>スマートフォン</strong>: 中央配置、幅90%</li>
+</ul>
+<h4>5.4.5 オートセーブ機能</h4>
+<ul>
+<li><strong>間隔</strong>: 30秒ごと</li>
+<li><strong>表示</strong>: オートセーブ中インジケーター</li>
+<li><strong>復元</strong>: 前回の編集状態を復元可能</li>
+</ul>
+<h2>6. 投稿詳細画面（/posts/:id）</h2>
+<h3>6.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[投稿詳細]
+    B --&gt; C[タイトル]
+    B --&gt; D[本文]
+    B --&gt; E[画像]
+    B --&gt; F[投稿者情報]
+    B --&gt; G[いいねボタン]
+    B --&gt; H[編集ボタン]
+    B --&gt; I[削除ボタン]
+    A --&gt; J[ナビゲーション]
+    J --&gt; K[ログアウト]
+</code></pre>
+<h3>6.2 DBへのI/O</h3>
+<ul>
+<li><strong>参照</strong>
+<ul>
+<li>投稿情報（postsテーブル）</li>
+<li>ユーザー情報（usersテーブル）</li>
+<li>いいね情報（likesテーブル）</li>
+<li>画像情報（imagesテーブル）</li>
+</ul>
+</li>
+<li><strong>更新</strong>
+<ul>
+<li>いいね情報（likesテーブル）</li>
+</ul>
+</li>
+<li><strong>削除</strong>
+<ul>
+<li>投稿情報（postsテーブル）</li>
+<li>画像情報（imagesテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>6.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[投稿詳細] --&gt; B[投稿一覧]
+    A --&gt; C[投稿編集]
+    A --&gt; D[ログアウト]
+</code></pre>
+<h3>6.4 詳細仕様</h3>
+<h4>6.4.1 投稿詳細</h4>
+<ul>
+<li>
+<p><strong>タイトル</strong></p>
+<ul>
+<li>表示位置: 最上部</li>
+<li>スタイル: 大見出し</li>
+<li>文字サイズ: 24px</li>
+</ul>
+</li>
+<li>
+<p><strong>本文</strong></p>
+<ul>
+<li>表示位置: タイトル下部</li>
+<li>スタイル: リッチテキスト</li>
+<li>文字サイズ: 16px</li>
+<li>行間: 1.6</li>
+<li>画像表示: レスポンシブ対応</li>
+</ul>
+</li>
+<li>
+<p><strong>投稿者情報</strong></p>
+<ul>
+<li><strong>表示項目</strong>:
+<ul>
+<li>投稿者名</li>
+<li>投稿日時</li>
+<li>カテゴリー</li>
+</ul>
+</li>
+<li><strong>表示位置</strong>: 本文下部</li>
+<li><strong>スタイル</strong>: グレー文字</li>
+</ul>
+</li>
+<li>
+<p><strong>いいね機能</strong></p>
+<ul>
+<li><strong>ボタン</strong>:
+<ul>
+<li>アイコン: ハート</li>
+<li>状態:
+<ul>
+<li>未いいね: 白抜き</li>
+<li>いいね済み: 赤塗り</li>
+</ul>
+</li>
+<li>アニメーション: クリック時</li>
+</ul>
+</li>
+<li><strong>カウント表示</strong>:
+<ul>
+<li>位置: ボタン横</li>
+<li>更新: リアルタイム</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>アクションボタン</strong></p>
+<ul>
+<li><strong>編集ボタン</strong>:
+<ul>
+<li>表示条件: 投稿者本人のみ</li>
+<li>アイコン: 鉛筆</li>
+<li>クリック時: 編集画面へ遷移</li>
+</ul>
+</li>
+<li><strong>削除ボタン</strong>:
+<ul>
+<li>表示条件: 投稿者本人のみ</li>
+<li>アイコン: ゴミ箱</li>
+<li>クリック時: 確認ダイアログ表示</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4>6.4.2 ヘッダー</h4>
+<ul>
+<li><strong>ロゴ</strong>: アプリケーション名</li>
+<li><strong>ナビゲーション</strong>:
+<ul>
+<li>投稿一覧への戻るボタン</li>
+<li>ユーザー名表示</li>
+<li>ログアウトボタン</li>
+</ul>
+</li>
+</ul>
+<h4>6.4.3 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 中央配置、幅800px</li>
+<li><strong>タブレット</strong>: 中央配置、幅90%</li>
+<li><strong>スマートフォン</strong>: 中央配置、幅90%</li>
+</ul>
+<h4>6.4.4 削除確認ダイアログ</h4>
+<ul>
+<li><strong>表示内容</strong>:
+<ul>
+<li>タイトル: &quot;投稿の削除&quot;</li>
+<li>メッセージ: &quot;この投稿を削除してもよろしいですか？&quot;</li>
+<li>キャンセルボタン</li>
+<li>削除ボタン</li>
+</ul>
+</li>
+<li><strong>スタイル</strong>: モーダルウィンドウ</li>
+</ul>
+<h2>7. 公開投稿詳細画面（/posts/public/:id）</h2>
+<h3>7.1 画面構造</h3>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[投稿詳細]
+    B --&gt; C[タイトル]
+    B --&gt; D[本文]
+    B --&gt; E[画像]
+    B --&gt; F[投稿者情報]
+    B --&gt; G[いいねボタン]
+    A --&gt; H[ナビゲーション]
+    H --&gt; I[ログイン]
+    H --&gt; J[新規登録]
+</code></pre>
+<h3>7.2 DBへのI/O</h3>
+<ul>
+<li><strong>参照</strong>
+<ul>
+<li>投稿情報（postsテーブル）</li>
+<li>ユーザー情報（usersテーブル）</li>
+<li>いいね情報（likesテーブル）</li>
+<li>画像情報（imagesテーブル）</li>
+</ul>
+</li>
+<li><strong>更新</strong>
+<ul>
+<li>いいね情報（likesテーブル）</li>
+</ul>
+</li>
+</ul>
+<h3>7.3 画面遷移</h3>
+<pre><code class="language-mermaid">graph LR
+    A[公開投稿詳細] --&gt; B[ログイン]
+    A --&gt; C[新規登録]
+    A --&gt; D[ホーム]
+</code></pre>
+<h3>7.4 詳細仕様</h3>
+<h4>7.4.1 投稿詳細</h4>
+<ul>
+<li>
+<p><strong>タイトル</strong></p>
+<ul>
+<li>表示位置: 最上部</li>
+<li>スタイル: 大見出し</li>
+<li>文字サイズ: 24px</li>
+</ul>
+</li>
+<li>
+<p><strong>本文</strong></p>
+<ul>
+<li>表示位置: タイトル下部</li>
+<li>スタイル: リッチテキスト</li>
+<li>文字サイズ: 16px</li>
+<li>行間: 1.6</li>
+<li>画像表示: レスポンシブ対応</li>
+</ul>
+</li>
+<li>
+<p><strong>投稿者情報</strong></p>
+<ul>
+<li><strong>表示項目</strong>:
+<ul>
+<li>投稿者名</li>
+<li>投稿日時</li>
+<li>カテゴリー</li>
+</ul>
+</li>
+<li><strong>表示位置</strong>: 本文下部</li>
+<li><strong>スタイル</strong>: グレー文字</li>
+</ul>
+</li>
+<li>
+<p><strong>いいね機能</strong></p>
+<ul>
+<li><strong>ボタン</strong>:
+<ul>
+<li>アイコン: ハート</li>
+<li>状態:
+<ul>
+<li>未いいね: 白抜き</li>
+<li>いいね済み: 赤塗り</li>
+</ul>
+</li>
+<li>アニメーション: クリック時</li>
+</ul>
+</li>
+<li><strong>カウント表示</strong>:
+<ul>
+<li>位置: ボタン横</li>
+<li>更新: リアルタイム</li>
+</ul>
+</li>
+<li><strong>ログイン時</strong>:
+<ul>
+<li>いいね可能</li>
+</ul>
+</li>
+<li><strong>未ログイン時</strong>:
+<ul>
+<li>いいね不可</li>
+<li>クリック時: ログイン画面へ遷移</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4>7.4.2 ヘッダー</h4>
+<ul>
+<li><strong>ロゴ</strong>: アプリケーション名</li>
+<li><strong>ナビゲーション</strong>:
+<ul>
+<li>ホームへの戻るボタン</li>
+<li>ログイン（未ログイン時）</li>
+<li>新規登録（未ログイン時）</li>
+</ul>
+</li>
+</ul>
+<h4>7.4.3 レスポンシブ対応</h4>
+<ul>
+<li><strong>PC</strong>: 中央配置、幅800px</li>
+<li><strong>タブレット</strong>: 中央配置、幅90%</li>
+<li><strong>スマートフォン</strong>: 中央配置、幅90%</li>
+</ul>
+<h4>7.4.4 関連投稿</h4>
+<ul>
+<li><strong>表示位置</strong>: 投稿詳細下部</li>
+<li><strong>表示件数</strong>: 3件</li>
+<li><strong>表示項目</strong>:
+<ul>
+<li>タイトル</li>
+<li>投稿者名</li>
+<li>投稿日時</li>
+</ul>
+</li>
+<li><strong>選択条件</strong>:
+<ul>
+<li>同じカテゴリー</li>
+<li>投稿日時の降順</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logout</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>ログアウト機能仕様書</h1>
+<h2>1. 概要</h2>
+<ul>
+<li><strong>目的</strong>: ユーザーのセッションを終了し、アプリケーションからログアウトする</li>
+<li><strong>主要機能</strong>: トークンの削除とセッションの終了</li>
+<li><strong>対象ユーザー</strong>: ログイン中のユーザー</li>
+</ul>
+<h2>2. 機能一覧</h2>
+<p>| 機能ID | 機能名 | 説明 | 優先度 |
+|--------|--------|------|--------|
+| LOGOUT001 | ログアウト処理 | トークンの削除とセッションの終了 | 高 |
+| LOGOUT002 | 画面遷移 | ログイン画面への遷移 | 中 |</p>
+<h2>3. セキュリティ要件</h2>
+<ul>
+<li>トークンの完全な削除</li>
+<li>セッションの確実な終了</li>
+<li>CSRFトークンの検証（Laravelデフォルト）</li>
+</ul>
+<h2>4. パフォーマンス要件</h2>
+<ul>
+<li>ログアウト処理の完了時間: 1秒以内</li>
+<li>画面遷移の完了時間: 0.5秒以内</li>
+</ul>
+<h2>5. コンポーネント設計</h2>
+<h3>5.1 ログアウトボタン</h3>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;button
+    @click=&quot;handleLogout&quot;
+    :disabled=&quot;loading&quot;
+  &gt;
+    {{ loading ? 'ログアウト中...' : 'ログアウト' }}
+  &lt;/button&gt;
+&lt;/template&gt;
+</code></pre>
+<h3>5.2 状態管理</h3>
+<pre><code class="language-typescript">interface LogoutState {
+  loading: boolean;
+}
+
+const state = reactive&lt;LogoutState&gt;({
+  loading: false
+});
+</code></pre>
+<h3>5.3 メソッド</h3>
+<pre><code class="language-typescript">const handleLogout = async () =&gt; {
+  state.loading = true;
+  
+  try {
+    await authStore.logout();
+    router.push('/login');
+  } finally {
+    state.loading = false;
+  }
+};
+</code></pre>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>新規登録画面仕様書</h1>
+<h2>1. 概要</h2>
+<ul>
+<li><strong>目的</strong>: 新規ユーザーの登録を行う</li>
+<li><strong>主要機能</strong>: ユーザー情報の入力と登録</li>
+<li><strong>対象ユーザー</strong>: 未登録ユーザー</li>
+</ul>
+<h2>2. 画面レイアウト</h2>
+<pre><code class="language-mermaid">graph TD
+    A[ヘッダー] --&gt; B[登録フォーム]
+    B --&gt; C[名前入力]
+    B --&gt; D[メールアドレス入力]
+    B --&gt; E[パスワード入力]
+    B --&gt; F[パスワード確認入力]
+    B --&gt; G[登録ボタン]
+    B --&gt; H[ログインリンク]
+    B --&gt; I[エラーメッセージ]
+</code></pre>
+<h2>3. 画面遷移</h2>
+<pre><code class="language-mermaid">graph LR
+    A[トップページ] --&gt; B[新規登録画面]
+    B --&gt; C[ログイン画面]
+    B --&gt; D[ダッシュボード]
+</code></pre>
+<h2>4. 機能一覧</h2>
+<p>| 機能ID | 機能名 | 説明 | 優先度 |
+|--------|--------|------|--------|
+| REG001 | ユーザー登録 | 新規ユーザー情報の登録 | 高 |
+| REG002 | ログイン遷移 | ログイン画面への遷移 | 中 |
+| REG003 | エラー表示 | 登録エラーの表示 | 高 |</p>
+<h2>5. 入力項目</h2>
+<p>| 項目ID | 項目名 | 型 | 必須 | バリデーション | 備考 |
+|--------|--------|----|------|--------------|------|
+| REG001 | 名前 | text | 必須 | 最大255文字 | - |
+| REG002 | メールアドレス | email | 必須 | メール形式、最大255文字、重複不可 | - |
+| REG003 | パスワード | password | 必須 | 最小8文字、確認用パスワードと一致 | - |
+| REG004 | パスワード確認 | password | 必須 | REG003と一致 | - |</p>
+<h2>6. エラーメッセージ</h2>
+<p>| エラーコード | メッセージ | 発生条件 |
+|-------------|-----------|----------|
+| REG001 | このメールアドレスは既に使用されています | メールアドレス重複 |
+| REG002 | 名前を入力してください | 名前未入力 |
+| REG003 | メールアドレスを入力してください | メールアドレス未入力 |
+| REG004 | パスワードを入力してください | パスワード未入力 |
+| REG005 | パスワードは8文字以上で入力してください | パスワード長不足 |
+| REG006 | パスワードが一致しません | パスワード不一致 |</p>
+<h2>7. アクセシビリティ要件</h2>
+<ul>
+<li>キーボード操作で全ての機能が利用可能</li>
+<li>スクリーンリーダー対応</li>
+<li>色のコントラスト比4.5:1以上</li>
+<li>エラーメッセージは視覚的かつ音声で通知</li>
+<li>フォームの各項目に適切なラベルと説明文を付与</li>
+</ul>
+<h2>8. セキュリティ要件</h2>
+<ul>
+<li>CSRFトークンの検証（Laravelデフォルト）</li>
+<li>パスワード入力欄はマスク表示</li>
+<li>パスワードの暗号化（bcrypt）</li>
+<li>セキュアなCookie設定（Laravelデフォルト）</li>
+</ul>
+<h2>9. パフォーマンス要件</h2>
+<ul>
+<li>ページロード時間: 2秒以内</li>
+<li>フォーム送信後のレスポンス時間: 1秒以内</li>
+<li>エラーメッセージの表示時間: 0.5秒以内</li>
+</ul>
+<h2>10. コンポーネント設計</h2>
+<h3>10.1 登録フォーム</h3>
+<pre><code class="language-vue">&lt;template&gt;
+  &lt;form @submit.prevent=&quot;handleRegister&quot;&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;name&quot;&gt;名前&lt;/label&gt;
+      &lt;input
+        id=&quot;name&quot;
+        v-model=&quot;name&quot;
+        type=&quot;text&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;email&quot;&gt;メールアドレス&lt;/label&gt;
+      &lt;input
+        id=&quot;email&quot;
+        v-model=&quot;email&quot;
+        type=&quot;email&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;password&quot;&gt;パスワード&lt;/label&gt;
+      &lt;input
+        id=&quot;password&quot;
+        v-model=&quot;password&quot;
+        type=&quot;password&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;password_confirmation&quot;&gt;パスワード（確認）&lt;/label&gt;
+      &lt;input
+        id=&quot;password_confirmation&quot;
+        v-model=&quot;passwordConfirmation&quot;
+        type=&quot;password&quot;
+        required
+        :disabled=&quot;loading&quot;
+      &gt;
+    &lt;/div&gt;
+    &lt;button
+      type=&quot;submit&quot;
+      :disabled=&quot;loading&quot;
+    &gt;
+      {{ loading ? '登録中...' : '登録' }}
+    &lt;/button&gt;
+    &lt;div v-if=&quot;error&quot; class=&quot;error-message&quot;&gt;
+      {{ error }}
+    &lt;/div&gt;
+  &lt;/form&gt;
+&lt;/template&gt;
+</code></pre>
+<h3>10.2 状態管理</h3>
+<pre><code class="language-typescript">interface RegisterState {
+  name: string;
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  loading: boolean;
+  error: string | null;
+}
+
+const state = reactive&lt;RegisterState&gt;({
+  name: '',
+  email: '',
+  password: '',
+  passwordConfirmation: '',
+  loading: false,
+  error: null
+});
+</code></pre>
+<h3>10.3 メソッド</h3>
+<pre><code class="language-typescript">const handleRegister = async () =&gt; {
+  state.loading = true;
+  state.error = null;
+  
+  try {
+    await authStore.register({
+      name: state.name,
+      email: state.email,
+      password: state.password,
+      password_confirmation: state.passwordConfirmation
+    });
+    router.push('/dashboard');
+  } catch (error) {
+    state.error = '登録に失敗しました。';
+  } finally {
+    state.loading = false;
+  }
+};
+</code></pre>
+
+    </div>
+</body>
+</html>

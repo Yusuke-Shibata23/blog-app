@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>auth</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .markdown-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 0.2em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="markdown-body bg-white shadow-lg rounded-lg">
+        <h1>フロントエンド認証設計書</h1>
+<h2>1. 認証状態管理（Pinia Store）</h2>
+<h3>1.1 状態（State）</h3>
+<pre><code class="language-typescript">interface AuthState {
+    user: User | null;          // ユーザー情報
+    isAuthenticated: boolean;   // 認証状態
+    loading: boolean;          // ローディング状態
+}
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    created_at: string;
+    updated_at: string;
+}
+</code></pre>
+<h3>1.2 ゲッター（Getters）</h3>
+<pre><code class="language-typescript">interface AuthGetters {
+    currentUser: User | null;  // 現在のユーザー情報
+    isLoggedIn: boolean;       // ログイン状態
+}
+</code></pre>
+<h3>1.3 アクション（Actions）</h3>
+<h4>1.3.1 ログイン</h4>
+<pre><code class="language-typescript">async login(credentials: {
+    email: string;
+    password: string;
+}): Promise&lt;{
+    user: User;
+    token: string;
+}&gt;
+</code></pre>
+<ul>
+<li><strong>処理フロー</strong>:
+<ol>
+<li>ローディング状態を<code>true</code>に設定</li>
+<li><code>/api/login</code>にPOSTリクエスト</li>
+<li>レスポンスからトークンを取得</li>
+<li>トークンを<code>localStorage</code>に保存</li>
+<li>Axiosのデフォルトヘッダーにトークンを設定</li>
+<li>認証状態を確認</li>
+<li>ローディング状態を<code>false</code>に設定</li>
+</ol>
+</li>
+</ul>
+<h4>1.3.2 登録</h4>
+<pre><code class="language-typescript">async register(userData: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}): Promise&lt;{
+    user: User;
+    token: string;
+}&gt;
+</code></pre>
+<ul>
+<li><strong>処理フロー</strong>:
+<ol>
+<li>ローディング状態を<code>true</code>に設定</li>
+<li><code>/api/register</code>にPOSTリクエスト</li>
+<li>レスポンスからトークンを取得</li>
+<li>トークンを<code>localStorage</code>に保存</li>
+<li>Axiosのデフォルトヘッダーにトークンを設定</li>
+<li>認証状態を確認</li>
+<li>ローディング状態を<code>false</code>に設定</li>
+</ol>
+</li>
+</ul>
+<h4>1.3.3 ログアウト</h4>
+<pre><code class="language-typescript">async logout(): Promise&lt;void&gt;
+</code></pre>
+<ul>
+<li><strong>処理フロー</strong>:
+<ol>
+<li>ローディング状態を<code>true</code>に設定</li>
+<li><code>/api/logout</code>にPOSTリクエスト</li>
+<li>ユーザー情報を<code>null</code>に設定</li>
+<li>認証状態を<code>false</code>に設定</li>
+<li><code>localStorage</code>からトークンを削除</li>
+<li>Axiosのデフォルトヘッダーからトークンを削除</li>
+<li>ローディング状態を<code>false</code>に設定</li>
+</ol>
+</li>
+</ul>
+<h4>1.3.4 認証状態確認</h4>
+<pre><code class="language-typescript">async checkAuth(): Promise&lt;void&gt;
+</code></pre>
+<ul>
+<li><strong>処理フロー</strong>:
+<ol>
+<li><code>localStorage</code>からトークンを取得</li>
+<li>トークンが存在しない場合:
+<ul>
+<li>ユーザー情報を<code>null</code>に設定</li>
+<li>認証状態を<code>false</code>に設定</li>
+<li>処理を終了</li>
+</ul>
+</li>
+<li><code>/api/user</code>にGETリクエスト</li>
+<li>レスポンスが正常な場合:
+<ul>
+<li>ユーザー情報を更新</li>
+<li>認証状態を<code>true</code>に設定</li>
+</ul>
+</li>
+<li>エラーの場合:
+<ul>
+<li>ユーザー情報を<code>null</code>に設定</li>
+<li>認証状態を<code>false</code>に設定</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h2>2. トークン管理</h2>
+<h3>2.1 保存方法</h3>
+<ul>
+<li><code>localStorage</code>に保存</li>
+<li>キー: <code>token</code></li>
+<li>値: Bearerトークン</li>
+</ul>
+<h3>2.2 使用方法</h3>
+<ul>
+<li>Axiosのデフォルトヘッダーに設定</li>
+</ul>
+<pre><code class="language-typescript">axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+</code></pre>
+<h3>2.3 削除方法</h3>
+<pre><code class="language-typescript">localStorage.removeItem('token');
+delete axios.defaults.headers.common['Authorization'];
+</code></pre>
+<h2>3. エラーハンドリング</h2>
+<h3>3.1 ログインエラー</h3>
+<pre><code class="language-typescript">try {
+    await authStore.login(credentials);
+} catch (error) {
+    console.error('ログインエラー:', error);
+    // エラーメッセージを表示
+}
+</code></pre>
+<h3>3.2 登録エラー</h3>
+<pre><code class="language-typescript">try {
+    await authStore.register(userData);
+} catch (error) {
+    console.error('登録エラー:', error);
+    // エラーメッセージを表示
+}
+</code></pre>
+<h3>3.3 ログアウトエラー</h3>
+<pre><code class="language-typescript">try {
+    await authStore.logout();
+} catch (error) {
+    console.error('ログアウトエラー:', error);
+    // エラーメッセージを表示
+}
+</code></pre>
+<h2>4. 認証ガード</h2>
+<h3>4.1 ルートガード</h3>
+<pre><code class="language-typescript">router.beforeEach(async (to, from, next) =&gt; {
+    if (to.meta.requiresAuth &amp;&amp; !authStore.isLoggedIn) {
+        next('/login');
+    } else {
+        next();
+    }
+});
+</code></pre>
+<h3>4.2 コンポーネントガード</h3>
+<pre><code class="language-typescript">onMounted(async () =&gt; {
+    if (!authStore.isLoggedIn) {
+        router.push('/login');
+    }
+});
+</code></pre>
+
+    </div>
+</body>
+</html>
